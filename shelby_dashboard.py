@@ -23,11 +23,6 @@ st.markdown("""
         display: none;
     }
     
-    /* Hide main menu */
-    #MainMenu {
-        display: none;
-    }
-    
     .main > div {
         padding-top: 2rem;
     }
