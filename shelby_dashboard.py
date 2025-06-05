@@ -117,9 +117,8 @@ st.markdown("""
 
 # Sidebar Navigation
 with st.sidebar:
-    # Add Friends of Shelby title at the top
-    st.markdown("🌲 **Friends of Shelby**")
-    st.markdown("")
+    # Add Friends of Shelby title as header
+    st.markdown('<div class="sidebar-header">🌲 Friends of Shelby</div>', unsafe_allow_html=True)
     
     st.markdown('<div class="nav-section">', unsafe_allow_html=True)
     st.markdown("### Navigation")
@@ -136,6 +135,7 @@ with st.sidebar:
     st.selectbox("Date Range", ["Last Month", "Last 3 Months", "Last Year"], key="sidebar_date")
     st.selectbox("Organization", ["All", "ICLR", "Cerecore HCA"], key="sidebar_org")
     st.multiselect("Metrics to Show", ["Volunteers", "Hours", "Accessibility", "Satisfaction"], key="sidebar_metrics")
+
 
 # Determine which page to show
 if 'current_page' not in st.session_state:
