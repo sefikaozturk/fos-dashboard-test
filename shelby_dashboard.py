@@ -1,4 +1,4 @@
-import streamlit as st
+eimport streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -66,7 +66,7 @@ st.markdown("""
     /* Component separation styling */
     .component-separator {
         margin: 1.5rem 0;
-        border-bottom: 1px solid #fffff;
+        border-bottom: 1px solid #e1e5e9;
         padding-bottom: 1rem;
     }
     
