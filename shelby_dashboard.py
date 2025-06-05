@@ -206,8 +206,8 @@ if page == "Volunteer Program":
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        with st.container():
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        chart_container = st.container(border=True)
+        with chart_container:
             st.subheader("Volunteer Participation Trends Over Time")
             
             months, invasive, trail, painting, lake = generate_volunteer_data()
@@ -227,11 +227,10 @@ if page == "Volunteer Program":
                 paper_bgcolor='white'
             )
             st.plotly_chart(fig, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        with st.container():
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        chart_container = st.container(border=True)
+        with chart_container:
             st.subheader("Popular Events")
             
             # Pie chart
@@ -248,14 +247,13 @@ if page == "Volunteer Program":
             )])
             fig_pie.update_layout(height=400)
             st.plotly_chart(fig_pie, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
     
     # Bottom section with proper containers
     col1, col2 = st.columns([3, 1])
     
     with col1:
-        with st.container():
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        chart_container = st.container(border=True)
+        with chart_container:
             st.subheader("Volunteer Satisfaction")
             
             # Bar chart data
@@ -282,16 +280,14 @@ if page == "Volunteer Program":
                 paper_bgcolor='white'
             )
             st.plotly_chart(fig_bar, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        with st.container():
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        filter_container = st.container(border=True)
+        with filter_container:
             st.markdown("### Filters")
             st.selectbox("Pick date", ["Overall"])
             st.selectbox("Pick organization", ["Overall"])
             st.checkbox("Show multiple")
-            st.markdown('</div>', unsafe_allow_html=True)
 
 # Page 2: Restore The Forest Program  
 elif page == "Restore The Forest Program":
@@ -339,8 +335,8 @@ elif page == "Restore The Forest Program":
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        with st.container():
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        chart_container = st.container(border=True)
+        with chart_container:
             st.subheader("Acres Cleaned Over Time")
             
             # Line chart with two years
@@ -359,11 +355,10 @@ elif page == "Restore The Forest Program":
                 paper_bgcolor='white'
             )
             st.plotly_chart(fig_line, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        with st.container():
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        chart_container = st.container(border=True)
+        with chart_container:
             st.subheader("Acres Cleaned per Month")
             
             months_short, acres_data = generate_forest_data()
@@ -391,14 +386,13 @@ elif page == "Restore The Forest Program":
                 paper_bgcolor='white'
             )
             st.plotly_chart(fig_stack, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
     
     # Bottom section - Logs with proper containers
     col1, col2 = st.columns(2)
     
     with col1:
-        with st.container():
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        log_container = st.container(border=True)
+        with log_container:
             st.subheader("ArcGIS System Log")
             
             log_items = [
@@ -418,11 +412,10 @@ elif page == "Restore The Forest Program":
                     st.write(time)
             
             st.write("🔄 view all")
-            st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        with st.container():
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        log_container = st.container(border=True)
+        with log_container:
             st.subheader("DIY Volunteers & WildSpotter Submissions Log")
             
             # Log entries
@@ -439,7 +432,6 @@ elif page == "Restore The Forest Program":
             
             Aliquam vel nibh iaculis, ornare purus sit amet, euismod dui. Cras sed tristique neque. Cras ornare dui lorem, vel rhoncus elit venenatis sit amet. Suspendisse varius massa in gravida commodo. **More...**
             """)
-            st.markdown('</div>', unsafe_allow_html=True)
 
 # Page 3: Strategic Plan - Pillar 1
 else:
