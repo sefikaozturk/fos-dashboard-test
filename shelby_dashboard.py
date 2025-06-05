@@ -23,7 +23,7 @@ st.markdown("""
 .metric-container {
     background: #4a4a4a;
     color: white;
-    padding: 1rem;
+    padding: 1.5rem;
     border-radius: 10px;
     margin-bottom: 1rem;
     min-height: 150px;
@@ -46,8 +46,8 @@ st.markdown("""
     font-size: 1rem;
     color: #e0e0e0;
 }
-.component-container {
-    background: white;
+div.component-container {
+    background-color: #ffffff;
     border: 1px solid #e1e5e9;
     border-radius: 10px;
     padding: 1.5rem;
@@ -91,6 +91,13 @@ def generate_accessibility_data():
     iclr = [30, 58, 43, 30, 20, 55, 25, 68]
     cerecore = [85, 82, 65, 55, 75, 60, 54, 60]
     return months, iclr, cerecore
+
+# Custom container function
+def start_container():
+    st.markdown('<div class="component-container">', unsafe_allow_html=True)
+
+def end_container():
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Page 1: Volunteer Program
 if page == "Volunteer Program":
@@ -144,80 +151,88 @@ if page == "Volunteer Program":
     # Charts row
     col1, col2 = st.columns([2, 1])
     with col1:
-        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
-        st.subheader("Volunteer Participation Trends Over Time")
-        months, invasive, trail, painting, lake = generate_volunteer_data()
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=months, y=invasive, name='Invasive Removal', line=dict(color='#333')))
-        fig.add_trace(go.Scatter(x=months, y=trail, name='Trail Maintenance', line=dict(color='#666')))
-        fig.add_trace(go.Scatter(x=months, y=painting, name='Painting', line=dict(color='#999')))
-        fig.add_trace(go.Scatter(x=months, y=lake, name='Lake Cleaning', line=dict(color='#ccc')))
-        fig.update_layout(
-            showlegend=True,
-            height=400,
-            xaxis_title="",
-            yaxis_title="",
-            plot_bgcolor='white',
-            paper_bgcolor='white'
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        container1 = st.container()
+        with container1:
+            start_container()
+            st.subheader("Volunteer Participation Trends Over Time")
+            months, invasive, trail, painting, lake = generate_volunteer_data()
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=months, y=invasive, name='Invasive Removal', line=dict(color='#333')))
+            fig.add_trace(go.Scatter(x=months, y=trail, name='Trail Maintenance', line=dict(color='#666')))
+            fig.add_trace(go.Scatter(x=months, y=painting, name='Painting', line=dict(color='#999')))
+            fig.add_trace(go.Scatter(x=months, y=lake, name='Lake Cleaning', line=dict(color='#ccc')))
+            fig.update_layout(
+                showlegend=True,
+                height=400,
+                xaxis_title="",
+                yaxis_title="",
+                plot_bgcolor='white',
+                paper_bgcolor='white'
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            end_container()
             
     with col2:
-        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
-        st.subheader("Popular Events")
-        # Pie chart
-        labels = ['Trail Main...', 'Invasive ...', 'Pai...']
-        values = [40, 35, 25]
-        colors = ['#f4d03f', '#d5b895', '#a6a6a6']
-        fig_pie = go.Figure(data=[go.Pie(
-            labels=labels,
-            values=values,
-            hole=0.5,
-            marker_colors=colors,
-            showlegend=True
-        )])
-        fig_pie.update_layout(height=400)
-        st.plotly_chart(fig_pie, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        container2 = st.container()
+        with container2:
+            start_container()
+            st.subheader("Popular Events")
+            # Pie chart
+            labels = ['Trail Main...', 'Invasive ...', 'Pai...']
+            values = [40, 35, 25]
+            colors = ['#f4d03f', '#d5b895', '#a6a6a6']
+            fig_pie = go.Figure(data=[go.Pie(
+                labels=labels,
+                values=values,
+                hole=0.5,
+                marker_colors=colors,
+                showlegend=True
+            )])
+            fig_pie.update_layout(height=400)
+            st.plotly_chart(fig_pie, use_container_width=True)
+            end_container()
     
     st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
     
     # Bottom section
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
-        st.subheader("Volunteer Satisfaction")
-        # Bar chart data
-        categories = ['Invasive Removal', 'Trail Maintenance', 'Painting', 'Lake Cleaning']
-        months_bar = ['Jan', 'Feb', 'Mar', 'Apr', 'May']
-        fig_bar = go.Figure()
-        # Add bars for each month
-        for i, month in enumerate(months_bar):
-            values = np.random.randint(60, 90, len(categories))
-            fig_bar.add_trace(go.Bar(
-                name=month,
-                x=categories,
-                y=values,
-                marker_color=['#333', '#666', '#999', '#ccc'][i % 4]
-            ))
-        fig_bar.update_layout(
-            barmode='group',
-            height=400,
-            showlegend=False,
-            plot_bgcolor='white',
-            paper_bgcolor='white'
-        )
-        st.plotly_chart(fig_bar, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        container3 = st.container()
+        with container3:
+            start_container()
+            st.subheader("Volunteer Satisfaction")
+            # Bar chart data
+            categories = ['Invasive Removal', 'Trail Maintenance', 'Painting', 'Lake Cleaning']
+            months_bar = ['Jan', 'Feb', 'Mar', 'Apr', 'May']
+            fig_bar = go.Figure()
+            # Add bars for each month
+            for i, month in enumerate(months_bar):
+                values = np.random.randint(60, 90, len(categories))
+                fig_bar.add_trace(go.Bar(
+                    name=month,
+                    x=categories,
+                    y=values,
+                    marker_color=['#333', '#666', '#999', '#ccc'][i % 4]
+                ))
+            fig_bar.update_layout(
+                barmode='group',
+                height=400,
+                showlegend=False,
+                plot_bgcolor='white',
+                paper_bgcolor='white'
+            )
+            st.plotly_chart(fig_bar, use_container_width=True)
+            end_container()
             
     with col2:
-        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
-        st.markdown("### Filters")
-        st.selectbox("Pick date", ["Overall"])
-        st.selectbox("Pick organization", ["Overall"])
-        st.checkbox("Show multiple")
-        st.markdown("</div>", unsafe_allow_html=True)
+        container4 = st.container()
+        with container4:
+            start_container()
+            st.markdown("### Filters")
+            st.selectbox("Pick date", ["Overall"])
+            st.selectbox("Pick organization", ["Overall"])
+            st.checkbox("Show multiple")
+            end_container()
 
 # Page 2: Restore The Forest Program
 elif page == "Restore The Forest Program":
@@ -263,90 +278,98 @@ elif page == "Restore The Forest Program":
     # Charts row
     col1, col2 = st.columns([2, 1])
     with col1:
-        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
-        st.subheader("Acres Cleaned Over Time")
-        # Line chart with two years
-        months_long = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'August']
-        data_2024 = [12, 10, 8, 15, 10, 8, 6, 14]
-        data_2025 = [8, 9, 7, 12, 8, 12, 4, 18]
-        fig_line = go.Figure()
-        fig_line.add_trace(go.Scatter(x=months_long, y=data_2024, name='2024', line=dict(color='#333')))
-        fig_line.add_trace(go.Scatter(x=months_long, y=data_2025, name='2025', line=dict(color='#666')))
-        fig_line.update_layout(
-            height=400,
-            showlegend=True,
-            plot_bgcolor='white',
-            paper_bgcolor='white'
-        )
-        st.plotly_chart(fig_line, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        container5 = st.container()
+        with container5:
+            start_container()
+            st.subheader("Acres Cleaned Over Time")
+            # Line chart with two years
+            months_long = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'August']
+            data_2024 = [12, 10, 8, 15, 10, 8, 6, 14]
+            data_2025 = [8, 9, 7, 12, 8, 12, 4, 18]
+            fig_line = go.Figure()
+            fig_line.add_trace(go.Scatter(x=months_long, y=data_2024, name='2024', line=dict(color='#333')))
+            fig_line.add_trace(go.Scatter(x=months_long, y=data_2025, name='2025', line=dict(color='#666')))
+            fig_line.update_layout(
+                height=400,
+                showlegend=True,
+                plot_bgcolor='white',
+                paper_bgcolor='white'
+            )
+            st.plotly_chart(fig_line, use_container_width=True)
+            end_container()
             
     with col2:
-        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
-        st.subheader("Acres Cleaned per Month")
-        months_short, acres_data = generate_forest_data()
-        # Stacked bar chart
-        fig_stack = go.Figure()
-        fig_stack.add_trace(go.Bar(
-            name='Type 1',
-            x=months_short,
-            y=[x*0.6 for x in acres_data],
-            marker_color='#d5b895'
-        ))
-        fig_stack.add_trace(go.Bar(
-            name='Type 2',
-            x=months_short,
-            y=[x*0.4 for x in acres_data],
-            marker_color='#a6a6a6'
-        ))
-        fig_stack.update_layout(
-            barmode='stack',
-            height=400,
-            showlegend=False,
-            plot_bgcolor='white',
-            paper_bgcolor='white'
-        )
-        st.plotly_chart(fig_stack, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        container6 = st.container()
+        with container6:
+            start_container()
+            st.subheader("Acres Cleaned per Month")
+            months_short, acres_data = generate_forest_data()
+            # Stacked bar chart
+            fig_stack = go.Figure()
+            fig_stack.add_trace(go.Bar(
+                name='Type 1',
+                x=months_short,
+                y=[x*0.6 for x in acres_data],
+                marker_color='#d5b895'
+            ))
+            fig_stack.add_trace(go.Bar(
+                name='Type 2',
+                x=months_short,
+                y=[x*0.4 for x in acres_data],
+                marker_color='#a6a6a6'
+            ))
+            fig_stack.update_layout(
+                barmode='stack',
+                height=400,
+                showlegend=False,
+                plot_bgcolor='white',
+                paper_bgcolor='white'
+            )
+            st.plotly_chart(fig_stack, use_container_width=True)
+            end_container()
     
     st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
     
     # Bottom section - Logs
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
-        st.subheader("ArcGIS System Log")
-        log_items = [
-            ("New Support Ticket Opened", "Today"),
-            ("System Reset", "14 min"),
-            ("Production Server Down", "2 hours"),
-            ("System Shutdown", "1 day"),
-            ("DB Overloaded 80%", "1 day"),
-            ("13 New Alerts", "2 days")
-        ]
-        for item, time in log_items:
-            cola, colb = st.columns([3, 1])
-            with cola:
-                st.write(f"• {item}")
-            with colb:
-                st.write(time)
-        st.write("🔄 view all")
-        st.markdown("</div>", unsafe_allow_html=True)
+        container7 = st.container()
+        with container7:
+            start_container()
+            st.subheader("ArcGIS System Log")
+            log_items = [
+                ("New Support Ticket Opened", "Today"),
+                ("System Reset", "14 min"),
+                ("Production Server Down", "2 hours"),
+                ("System Shutdown", "1 day"),
+                ("DB Overloaded 80%", "1 day"),
+                ("13 New Alerts", "2 days")
+            ]
+            for item, time in log_items:
+                cola, colb = st.columns([3, 1])
+                with cola:
+                    st.write(f"• {item}")
+                with colb:
+                    st.write(time)
+            st.write("🔄 view all")
+            end_container()
             
     with col2:
-        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
-        st.subheader("DIY Volunteers & WildSpotter Submissions Log")
-        # Log entries
-        st.markdown("""
-        **Christan Bilney - 2 days ago**<br>
-        Low priority | V 3.20<br>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisl ut aliquip ex ea commodo consequat. More...
-        
-        **Hady Vanetti - 4 days ago**<br>
-        Critical | V 3.13<br>
-        Aliquam vel nibh iaculis, ornare purus sit amet, euismod dui. Cras sed tristique neque. Cras ornare dui lorem, vel rhoncus elit venenatis sit amet. Suspendisse varius massa in gravida commodo. More...
-        """, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        container8 = st.container()
+        with container8:
+            start_container()
+            st.subheader("DIY Volunteers & WildSpotter Submissions Log")
+            # Log entries
+            st.markdown("""
+            **Christan Bilney - 2 days ago**<br>
+            Low priority | V 3.20<br>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisl ut aliquip ex ea commodo consequat. More...
+            
+            **Hady Vanetti - 4 days ago**<br>
+            Critical | V 3.13<br>
+            Aliquam vel nibh iaculis, ornare purus sit amet, euismod dui. Cras sed tristique neque. Cras ornare dui lorem, vel rhoncus elit venenatis sit amet. Suspendisse varius massa in gravida commodo. More...
+            """, unsafe_allow_html=True)
+            end_container()
 
 # Page 3: Strategic Plan - Pillar 1
 else:
@@ -400,48 +423,52 @@ else:
     # Main chart
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
-        st.subheader("Park Accessibility Ratings Over Time by Organization")
-        months_acc, iclr_data, cerecore_data = generate_accessibility_data()
-        fig_acc = go.Figure()
-        fig_acc.add_trace(go.Scatter(
-            x=months_acc,
-            y=iclr_data,
-            name='ICLR',
-            line=dict(color='#333'),
-            marker=dict(size=8)
-        ))
-        fig_acc.add_trace(go.Scatter(
-            x=months_acc,
-            y=cerecore_data,
-            name='Cerecore HCA',
-            line=dict(color='#666'),
-            marker=dict(size=8)
-        ))
-        fig_acc.update_layout(
-            height=400,
-            showlegend=True,
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            yaxis=dict(range=[0, 100])
-        )
-        st.plotly_chart(fig_acc, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        container9 = st.container()
+        with container9:
+            start_container()
+            st.subheader("Park Accessibility Ratings Over Time by Organization")
+            months_acc, iclr_data, cerecore_data = generate_accessibility_data()
+            fig_acc = go.Figure()
+            fig_acc.add_trace(go.Scatter(
+                x=months_acc,
+                y=iclr_data,
+                name='ICLR',
+                line=dict(color='#333'),
+                marker=dict(size=8)
+            ))
+            fig_acc.add_trace(go.Scatter(
+                x=months_acc,
+                y=cerecore_data,
+                name='Cerecore HCA',
+                line=dict(color='#666'),
+                marker=dict(size=8)
+            ))
+            fig_acc.update_layout(
+                height=400,
+                showlegend=True,
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                yaxis=dict(range=[0, 100])
+            )
+            st.plotly_chart(fig_acc, use_container_width=True)
+            end_container()
             
     with col2:
-        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
-        st.markdown("### Filters")
-        colq4, colq5, colq6 = st.columns(3)
-        with colq4:
-            st.button("Q4", type="secondary")
-        with colq5:
-            st.button("Q5", type="secondary")
-        with colq6:
-            st.button("Q6", type="primary")
-        st.selectbox("Pick date", ["04/2025"])
-        st.selectbox("Pick organization", ["ICLR, Cerecore HCA"])
-        st.checkbox("Show multiple", value=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        container10 = st.container()
+        with container10:
+            start_container()
+            st.markdown("### Filters")
+            colq4, colq5, colq6 = st.columns(3)
+            with colq4:
+                st.button("Q4", type="secondary")
+            with colq5:
+                st.button("Q5", type="secondary")
+            with colq6:
+                st.button("Q6", type="primary")
+            st.selectbox("Pick date", ["04/2025"])
+            st.selectbox("Pick organization", ["ICLR, Cerecore HCA"])
+            st.checkbox("Show multiple", value=True)
+            end_container()
     
     st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
     
@@ -449,43 +476,47 @@ else:
     st.subheader("Park Accessibility Statements")
     col1, col2 = st.columns([4, 1])
     with col1:
-        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
-        statements = [
-            "It is easy to physically get to the park.",
-            "It is easy to find their way around the park.",
-            "The park has activities they want to participate in.",
-            "They see people that look like them at the park.",
-            "It is easy to find information about park activities.",
-            "It is easy for them to get equipments they need.",
-            "They feel welcome at the park.",
-            "They feel safe at the park."
-        ]
-        values = [13, 20, 34, 36, 45, 46, 66, 80]
-        fig_horiz = go.Figure()
-        fig_horiz.add_trace(go.Bar(
-            y=statements,
-            x=values,
-            orientation='h',
-            marker_color='#333'
-        ))
-        fig_horiz.update_layout(
-            height=500,
-            xaxis_title="Response Rate (%)",
-            showlegend=False,
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            margin=dict(l=300)
-        )
-        st.plotly_chart(fig_horiz, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        container11 = st.container()
+        with container11:
+            start_container()
+            statements = [
+                "It is easy to physically get to the park.",
+                "It is easy to find their way around the park.",
+                "The park has activities they want to participate in.",
+                "They see people that look like them at the park.",
+                "It is easy to find information about park activities.",
+                "It is easy for them to get equipments they need.",
+                "They feel welcome at the park.",
+                "They feel safe at the park."
+            ]
+            values = [13, 20, 34, 36, 45, 46, 66, 80]
+            fig_horiz = go.Figure()
+            fig_horiz.add_trace(go.Bar(
+                y=statements,
+                x=values,
+                orientation='h',
+                marker_color='#333'
+            ))
+            fig_horiz.update_layout(
+                height=500,
+                xaxis_title="Response Rate (%)",
+                showlegend=False,
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                margin=dict(l=300)
+            )
+            st.plotly_chart(fig_horiz, use_container_width=True)
+            end_container()
             
     with col2:
-        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
-        colq4b, colq5b, colq6b = st.columns(3)
-        with colq4b:
-            st.button("Q4", type="secondary", key="q4b")
-        with colq5b:
-            st.button("Q5", type="secondary", key="q5b")
-        with colq6b:
-            st.button("Q6", type="primary", key="q6b")
-        st.markdown("</div>", unsafe_allow_html=True)
+        container12 = st.container()
+        with container12:
+            start_container()
+            colq4b, colq5b, colq6b = st.columns(3)
+            with colq4b:
+                st.button("Q4", type="secondary", key="q4b")
+            with colq5b:
+                st.button("Q5", type="secondary", key="q5b")
+            with colq6b:
+                st.button("Q6", type="primary", key="q6b")
+            end_container()
