@@ -14,22 +14,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS to match the design
+# Custom CSS - specifically targeting containers and adding clear borders
 st.markdown("""
 <style>
 .main > div {
     padding-top: 2rem;
 }
-.metric-container {
+/* KPI Metrics */
+.metric-box {
     background: #4a4a4a;
     color: white;
     padding: 1.5rem;
     border-radius: 10px;
     margin-bottom: 1rem;
-    min-height: 150px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    height: 150px;
 }
 .metric-title {
     font-size: 1.2rem;
@@ -46,17 +44,23 @@ st.markdown("""
     font-size: 1rem;
     color: #e0e0e0;
 }
-div.component-container {
-    background-color: #ffffff;
+/* Component containers */
+div[data-testid="stVerticalBlock"] > div.block-container {
+    padding-top: 0;
+}
+.component-box {
+    background-color: white;
     border: 1px solid #e1e5e9;
     border-radius: 10px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
 }
+/* Section divider */
 .section-divider {
     border-top: 1px solid #e1e5e9;
     margin: 2rem 0;
 }
+/* Make sidebar thinner */
 [data-testid="stSidebar"] {
     min-width: 250px;
     max-width: 250px;
@@ -64,15 +68,7 @@ div.component-container {
 </style>
 """, unsafe_allow_html=True)
 
-# Sidebar navigation
-st.sidebar.title("🌲 Friends of Shelby")
-st.sidebar.markdown("### Navigation")
-page = st.sidebar.radio(
-    "Select a page:",
-    ["Volunteer Program", "Restore The Forest Program", "Strategic Plan - Pillar 1"]
-)
-
-# Sample data generation
+# Sample data generation functions
 def generate_volunteer_data():
     months = ['Jan', 'Feb', 'Mar', 'Apr', 'May']
     invasive_removal = [45, 55, 65, 45, 35]
@@ -92,11 +88,28 @@ def generate_accessibility_data():
     cerecore = [85, 82, 65, 55, 75, 60, 54, 60]
     return months, iclr, cerecore
 
-# Custom container function
-def start_container():
-    st.markdown('<div class="component-container">', unsafe_allow_html=True)
+# Sidebar navigation
+st.sidebar.title("🌲 Friends of Shelby")
+st.sidebar.markdown("### Navigation")
+page = st.sidebar.radio(
+    "Select a page:",
+    ["Volunteer Program", "Restore The Forest Program", "Strategic Plan - Pillar 1"]
+)
 
-def end_container():
+# Helper functions for component boxes
+def create_metric_box(title, value, change):
+    return f"""
+    <div class="metric-box">
+        <div class="metric-title">{title}</div>
+        <div class="metric-value">{value}</div>
+        <div class="metric-change">{change}</div>
+    </div>
+    """
+
+def component_box(content_function):
+    """Create a component box with content function inside"""
+    st.markdown('<div class="component-box">', unsafe_allow_html=True)
+    content_function()
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Page 1: Volunteer Program
@@ -114,46 +127,20 @@ if page == "Volunteer Program":
     # Top metrics row with equal-sized cards
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown("""
-        <div class="metric-container">
-            <div class="metric-title">Total Volunteers</div>
-            <div class="metric-value">21,324</div>
-            <div class="metric-change">+2,031</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(create_metric_box("Total Volunteers", "21,324", "+2,031"), unsafe_allow_html=True)
     with col2:
-        st.markdown("""
-        <div class="metric-container">
-            <div class="metric-title">Total Hours</div>
-            <div class="metric-value">16,769</div>
-            <div class="metric-change">+3,390</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(create_metric_box("Total Hours", "16,769", "+3,390"), unsafe_allow_html=True)
     with col3:
-        st.markdown("""
-        <div class="metric-container">
-            <div class="metric-title">Value of The Hours</div>
-            <div class="metric-value">$221,324.50</div>
-            <div class="metric-change">+$23,456</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(create_metric_box("Value of The Hours", "$221,324.50", "+$23,456"), unsafe_allow_html=True)
     with col4:
-        st.markdown("""
-        <div class="metric-container">
-            <div class="metric-title">Change fr. Last Year</div>
-            <div class="metric-value">12.8%</div>
-            <div class="metric-change">↑ 2.2%</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(create_metric_box("Change fr. Last Year", "12.8%", "↑ 2.2%"), unsafe_allow_html=True)
     
     st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
     
     # Charts row
     col1, col2 = st.columns([2, 1])
     with col1:
-        container1 = st.container()
-        with container1:
-            start_container()
+        def trends_chart():
             st.subheader("Volunteer Participation Trends Over Time")
             months, invasive, trail, painting, lake = generate_volunteer_data()
             fig = go.Figure()
@@ -170,14 +157,11 @@ if page == "Volunteer Program":
                 paper_bgcolor='white'
             )
             st.plotly_chart(fig, use_container_width=True)
-            end_container()
+        component_box(trends_chart)
             
     with col2:
-        container2 = st.container()
-        with container2:
-            start_container()
+        def pie_chart():
             st.subheader("Popular Events")
-            # Pie chart
             labels = ['Trail Main...', 'Invasive ...', 'Pai...']
             values = [40, 35, 25]
             colors = ['#f4d03f', '#d5b895', '#a6a6a6']
@@ -190,18 +174,15 @@ if page == "Volunteer Program":
             )])
             fig_pie.update_layout(height=400)
             st.plotly_chart(fig_pie, use_container_width=True)
-            end_container()
+        component_box(pie_chart)
     
     st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
     
     # Bottom section
     col1, col2 = st.columns([3, 1])
     with col1:
-        container3 = st.container()
-        with container3:
-            start_container()
+        def bar_chart():
             st.subheader("Volunteer Satisfaction")
-            # Bar chart data
             categories = ['Invasive Removal', 'Trail Maintenance', 'Painting', 'Lake Cleaning']
             months_bar = ['Jan', 'Feb', 'Mar', 'Apr', 'May']
             fig_bar = go.Figure()
@@ -222,17 +203,15 @@ if page == "Volunteer Program":
                 paper_bgcolor='white'
             )
             st.plotly_chart(fig_bar, use_container_width=True)
-            end_container()
+        component_box(bar_chart)
             
     with col2:
-        container4 = st.container()
-        with container4:
-            start_container()
+        def filters():
             st.markdown("### Filters")
             st.selectbox("Pick date", ["Overall"])
             st.selectbox("Pick organization", ["Overall"])
             st.checkbox("Show multiple")
-            end_container()
+        component_box(filters)
 
 # Page 2: Restore The Forest Program
 elif page == "Restore The Forest Program":
@@ -249,38 +228,18 @@ elif page == "Restore The Forest Program":
     # Top metrics
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown("""
-        <div class="metric-container">
-            <div class="metric-title">Acres Cleaned</div>
-            <div class="metric-value">1,340</div>
-            <div class="metric-change">Acreage for the current month</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(create_metric_box("Acres Cleaned", "1,340", "Acreage for the current month"), unsafe_allow_html=True)
     with col2:
-        st.markdown("""
-        <div class="metric-container">
-            <div class="metric-title">% of Forest Reached</div>
-            <div class="metric-value">34%</div>
-            <div class="metric-change">Area % of the forest covered by RTF</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(create_metric_box("% of Forest Reached", "34%", "Area % of the forest covered by RTF"), unsafe_allow_html=True)
     with col3:
-        st.markdown("""
-        <div class="metric-container">
-            <div class="metric-title">Volunteers</div>
-            <div class="metric-value">76</div>
-            <div class="metric-change">Volunteers participating in RTF</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(create_metric_box("Volunteers", "76", "Volunteers participating in RTF"), unsafe_allow_html=True)
     
     st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
     
     # Charts row
     col1, col2 = st.columns([2, 1])
     with col1:
-        container5 = st.container()
-        with container5:
-            start_container()
+        def line_chart():
             st.subheader("Acres Cleaned Over Time")
             # Line chart with two years
             months_long = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'August']
@@ -296,12 +255,10 @@ elif page == "Restore The Forest Program":
                 paper_bgcolor='white'
             )
             st.plotly_chart(fig_line, use_container_width=True)
-            end_container()
+        component_box(line_chart)
             
     with col2:
-        container6 = st.container()
-        with container6:
-            start_container()
+        def stacked_chart():
             st.subheader("Acres Cleaned per Month")
             months_short, acres_data = generate_forest_data()
             # Stacked bar chart
@@ -326,16 +283,14 @@ elif page == "Restore The Forest Program":
                 paper_bgcolor='white'
             )
             st.plotly_chart(fig_stack, use_container_width=True)
-            end_container()
+        component_box(stacked_chart)
     
     st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
     
     # Bottom section - Logs
     col1, col2 = st.columns(2)
     with col1:
-        container7 = st.container()
-        with container7:
-            start_container()
+        def system_log():
             st.subheader("ArcGIS System Log")
             log_items = [
                 ("New Support Ticket Opened", "Today"),
@@ -352,12 +307,10 @@ elif page == "Restore The Forest Program":
                 with colb:
                     st.write(time)
             st.write("🔄 view all")
-            end_container()
+        component_box(system_log)
             
     with col2:
-        container8 = st.container()
-        with container8:
-            start_container()
+        def submissions_log():
             st.subheader("DIY Volunteers & WildSpotter Submissions Log")
             # Log entries
             st.markdown("""
@@ -369,7 +322,7 @@ elif page == "Restore The Forest Program":
             Critical | V 3.13<br>
             Aliquam vel nibh iaculis, ornare purus sit amet, euismod dui. Cras sed tristique neque. Cras ornare dui lorem, vel rhoncus elit venenatis sit amet. Suspendisse varius massa in gravida commodo. More...
             """, unsafe_allow_html=True)
-            end_container()
+        component_box(submissions_log)
 
 # Page 3: Strategic Plan - Pillar 1
 else:
@@ -386,46 +339,20 @@ else:
     # Top metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown("""
-        <div class="metric-container">
-            <div class="metric-title">Total Responses</div>
-            <div class="metric-value">25</div>
-            <div class="metric-change">+2</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(create_metric_box("Total Responses", "25", "+2"), unsafe_allow_html=True)
     with col2:
-        st.markdown("""
-        <div class="metric-container">
-            <div class="metric-title">% Facing Barriers</div>
-            <div class="metric-value">75%</div>
-            <div class="metric-change">+3%</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(create_metric_box("% Facing Barriers", "75%", "+3%"), unsafe_allow_html=True)
     with col3:
-        st.markdown("""
-        <div class="metric-container">
-            <div class="metric-title">Accessibility</div>
-            <div class="metric-value">+23%</div>
-            <div class="metric-change">+5%</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(create_metric_box("Accessibility", "+23%", "+5%"), unsafe_allow_html=True)
     with col4:
-        st.markdown("""
-        <div class="metric-container">
-            <div class="metric-title">Park Visits</div>
-            <div class="metric-value">+14.8%</div>
-            <div class="metric-change">↑ 2.2%</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(create_metric_box("Park Visits", "+14.8%", "↑ 2.2%"), unsafe_allow_html=True)
     
     st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
     
     # Main chart
     col1, col2 = st.columns([3, 1])
     with col1:
-        container9 = st.container()
-        with container9:
-            start_container()
+        def accessibility_chart():
             st.subheader("Park Accessibility Ratings Over Time by Organization")
             months_acc, iclr_data, cerecore_data = generate_accessibility_data()
             fig_acc = go.Figure()
@@ -451,12 +378,10 @@ else:
                 yaxis=dict(range=[0, 100])
             )
             st.plotly_chart(fig_acc, use_container_width=True)
-            end_container()
+        component_box(accessibility_chart)
             
     with col2:
-        container10 = st.container()
-        with container10:
-            start_container()
+        def page3_filters():
             st.markdown("### Filters")
             colq4, colq5, colq6 = st.columns(3)
             with colq4:
@@ -468,7 +393,7 @@ else:
             st.selectbox("Pick date", ["04/2025"])
             st.selectbox("Pick organization", ["ICLR, Cerecore HCA"])
             st.checkbox("Show multiple", value=True)
-            end_container()
+        component_box(page3_filters)
     
     st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
     
@@ -476,9 +401,7 @@ else:
     st.subheader("Park Accessibility Statements")
     col1, col2 = st.columns([4, 1])
     with col1:
-        container11 = st.container()
-        with container11:
-            start_container()
+        def horizontal_bar():
             statements = [
                 "It is easy to physically get to the park.",
                 "It is easy to find their way around the park.",
@@ -506,12 +429,10 @@ else:
                 margin=dict(l=300)
             )
             st.plotly_chart(fig_horiz, use_container_width=True)
-            end_container()
+        component_box(horizontal_bar)
             
     with col2:
-        container12 = st.container()
-        with container12:
-            start_container()
+        def buttons():
             colq4b, colq5b, colq6b = st.columns(3)
             with colq4b:
                 st.button("Q4", type="secondary", key="q4b")
@@ -519,4 +440,4 @@ else:
                 st.button("Q5", type="secondary", key="q5b")
             with colq6b:
                 st.button("Q6", type="primary", key="q6b")
-            end_container()
+        component_box(buttons)
