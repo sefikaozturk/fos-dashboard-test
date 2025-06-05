@@ -17,6 +17,17 @@ st.set_page_config(
 # Custom CSS to match the design
 st.markdown("""
 <style>
+
+    /* Hide Streamlit header */
+    header[data-testid="stHeader"] {
+        display: none;
+    }
+    
+    /* Hide main menu */
+    #MainMenu {
+        display: none;
+    }
+    
     .main > div {
         padding-top: 2rem;
     }
