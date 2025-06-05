@@ -65,7 +65,7 @@ st.markdown("""
     
     /* Component separation styling */
     .component-separator {
-        margin: 1.5rem 0;
+        margin: 1rem 0;
         #border-bottom: 1px solid #e1e5e9;
         padding-bottom: 1rem;
     }
