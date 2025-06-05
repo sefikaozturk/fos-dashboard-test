@@ -177,7 +177,6 @@ if page == "Volunteer Program":
     st.markdown('<div class="component-separator">', unsafe_allow_html=True)
     col1, col2 = st.columns([6, 2])
     with col1:
-        st.markdown("🌲 **Friends of Shelby**")
         st.title("Friends of Shelby Dashboard")
         st.markdown("**Volunteer Program**")
     with col2:
