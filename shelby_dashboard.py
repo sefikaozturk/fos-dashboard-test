@@ -20,73 +20,51 @@ st.markdown("""
 .main > div {
     padding-top: 2rem;
 }
-.metric-card {
+.metric-container {
     background: #4a4a4a;
     color: white;
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 10px;
     margin-bottom: 1rem;
-    height: 150px;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
-.metric-card h1 {
-    color: white !important;
-    font-size: 2.5rem;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-.metric-card h3 {
-    color: #e0e0e0 !important;
+.metric-title {
     font-size: 1.2rem;
+    color: #e0e0e0;
     margin-bottom: 0.5rem;
 }
-.metric-card p {
-    color: #e0e0e0;
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: white;
+    margin: 0.5rem 0;
+}
+.metric-change {
     font-size: 1rem;
+    color: #e0e0e0;
 }
-.metric-card-light {
-    background: #f0f2f6;
-    color: #333;
-    padding: 1.5rem;
-    border-radius: 10px;
-    margin-bottom: 1rem;
+.component-container {
+    background: white;
     border: 1px solid #e1e5e9;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
 }
-.stSelectbox > div > div {
-    background-color: white;
-}
-.sidebar .sidebar-content {
-    background-color: #4a4a4a;
-}
-h1 {
-    color: #333;
-    font-weight: 600;
-}
-h3 {
-    color: #666;
-    font-weight: 500;
-}
-/* Section divider */
 .section-divider {
     border-top: 1px solid #e1e5e9;
     margin: 2rem 0;
 }
-/* Make sidebar thinner */
 [data-testid="stSidebar"] {
     min-width: 250px;
     max-width: 250px;
 }
-/* Dashboard component containers */
-.dashboard-component {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 10px;
-    border: 1px solid #e1e5e9;
-    margin-bottom: 1.5rem;
-}
 </style>
 """, unsafe_allow_html=True)
 
-# Sidebar navigation - changed from dropdown to radio buttons
+# Sidebar navigation
 st.sidebar.title("🌲 Friends of Shelby")
 st.sidebar.markdown("### Navigation")
 page = st.sidebar.radio(
@@ -130,34 +108,34 @@ if page == "Volunteer Program":
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown("""
-        <div class="metric-card">
-            <h3>Total Volunteers</h3>
-            <h1>21,324</h1>
-            <p>+2,031</p>
+        <div class="metric-container">
+            <div class="metric-title">Total Volunteers</div>
+            <div class="metric-value">21,324</div>
+            <div class="metric-change">+2,031</div>
         </div>
         """, unsafe_allow_html=True)
     with col2:
         st.markdown("""
-        <div class="metric-card">
-            <h3>Total Hours</h3>
-            <h1>16,769</h1>
-            <p>+3,390</p>
+        <div class="metric-container">
+            <div class="metric-title">Total Hours</div>
+            <div class="metric-value">16,769</div>
+            <div class="metric-change">+3,390</div>
         </div>
         """, unsafe_allow_html=True)
     with col3:
         st.markdown("""
-        <div class="metric-card">
-            <h3>Value of The Hours</h3>
-            <h1>$221,324.50</h1>
-            <p>+$23,456</p>
+        <div class="metric-container">
+            <div class="metric-title">Value of The Hours</div>
+            <div class="metric-value">$221,324.50</div>
+            <div class="metric-change">+$23,456</div>
         </div>
         """, unsafe_allow_html=True)
     with col4:
         st.markdown("""
-        <div class="metric-card">
-            <h3>Change fr. Last Year</h3>
-            <h1>12.8%</h1>
-            <p>↑ 2.2%</p>
+        <div class="metric-container">
+            <div class="metric-title">Change fr. Last Year</div>
+            <div class="metric-value">12.8%</div>
+            <div class="metric-change">↑ 2.2%</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -166,7 +144,7 @@ if page == "Volunteer Program":
     # Charts row
     col1, col2 = st.columns([2, 1])
     with col1:
-        st.markdown("<div class='dashboard-component'>", unsafe_allow_html=True)
+        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
         st.subheader("Volunteer Participation Trends Over Time")
         months, invasive, trail, painting, lake = generate_volunteer_data()
         fig = go.Figure()
@@ -186,7 +164,7 @@ if page == "Volunteer Program":
         st.markdown("</div>", unsafe_allow_html=True)
             
     with col2:
-        st.markdown("<div class='dashboard-component'>", unsafe_allow_html=True)
+        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
         st.subheader("Popular Events")
         # Pie chart
         labels = ['Trail Main...', 'Invasive ...', 'Pai...']
@@ -208,7 +186,7 @@ if page == "Volunteer Program":
     # Bottom section
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.markdown("<div class='dashboard-component'>", unsafe_allow_html=True)
+        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
         st.subheader("Volunteer Satisfaction")
         # Bar chart data
         categories = ['Invasive Removal', 'Trail Maintenance', 'Painting', 'Lake Cleaning']
@@ -234,7 +212,7 @@ if page == "Volunteer Program":
         st.markdown("</div>", unsafe_allow_html=True)
             
     with col2:
-        st.markdown("<div class='dashboard-component'>", unsafe_allow_html=True)
+        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
         st.markdown("### Filters")
         st.selectbox("Pick date", ["Overall"])
         st.selectbox("Pick organization", ["Overall"])
@@ -257,26 +235,26 @@ elif page == "Restore The Forest Program":
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown("""
-        <div class="metric-card">
-            <h3>Acres Cleaned</h3>
-            <h1>1,340</h1>
-            <p>Acreage for the current month</p>
+        <div class="metric-container">
+            <div class="metric-title">Acres Cleaned</div>
+            <div class="metric-value">1,340</div>
+            <div class="metric-change">Acreage for the current month</div>
         </div>
         """, unsafe_allow_html=True)
     with col2:
         st.markdown("""
-        <div class="metric-card">
-            <h3>% of Forest Reached</h3>
-            <h1>34%</h1>
-            <p>Area % of the forest covered by RTF</p>
+        <div class="metric-container">
+            <div class="metric-title">% of Forest Reached</div>
+            <div class="metric-value">34%</div>
+            <div class="metric-change">Area % of the forest covered by RTF</div>
         </div>
         """, unsafe_allow_html=True)
     with col3:
         st.markdown("""
-        <div class="metric-card">
-            <h3>Volunteers</h3>
-            <h1>76</h1>
-            <p>Volunteers participating in RTF</p>
+        <div class="metric-container">
+            <div class="metric-title">Volunteers</div>
+            <div class="metric-value">76</div>
+            <div class="metric-change">Volunteers participating in RTF</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -285,7 +263,7 @@ elif page == "Restore The Forest Program":
     # Charts row
     col1, col2 = st.columns([2, 1])
     with col1:
-        st.markdown("<div class='dashboard-component'>", unsafe_allow_html=True)
+        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
         st.subheader("Acres Cleaned Over Time")
         # Line chart with two years
         months_long = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'August']
@@ -304,7 +282,7 @@ elif page == "Restore The Forest Program":
         st.markdown("</div>", unsafe_allow_html=True)
             
     with col2:
-        st.markdown("<div class='dashboard-component'>", unsafe_allow_html=True)
+        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
         st.subheader("Acres Cleaned per Month")
         months_short, acres_data = generate_forest_data()
         # Stacked bar chart
@@ -336,7 +314,7 @@ elif page == "Restore The Forest Program":
     # Bottom section - Logs
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("<div class='dashboard-component'>", unsafe_allow_html=True)
+        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
         st.subheader("ArcGIS System Log")
         log_items = [
             ("New Support Ticket Opened", "Today"),
@@ -356,7 +334,7 @@ elif page == "Restore The Forest Program":
         st.markdown("</div>", unsafe_allow_html=True)
             
     with col2:
-        st.markdown("<div class='dashboard-component'>", unsafe_allow_html=True)
+        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
         st.subheader("DIY Volunteers & WildSpotter Submissions Log")
         # Log entries
         st.markdown("""
@@ -386,34 +364,34 @@ else:
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown("""
-        <div class="metric-card">
-            <h3>Total Responses</h3>
-            <h1>25</h1>
-            <p>+2</p>
+        <div class="metric-container">
+            <div class="metric-title">Total Responses</div>
+            <div class="metric-value">25</div>
+            <div class="metric-change">+2</div>
         </div>
         """, unsafe_allow_html=True)
     with col2:
         st.markdown("""
-        <div class="metric-card">
-            <h3>% Facing Barriers</h3>
-            <h1>75%</h1>
-            <p>+3%</p>
+        <div class="metric-container">
+            <div class="metric-title">% Facing Barriers</div>
+            <div class="metric-value">75%</div>
+            <div class="metric-change">+3%</div>
         </div>
         """, unsafe_allow_html=True)
     with col3:
         st.markdown("""
-        <div class="metric-card">
-            <h3>Accessibility</h3>
-            <h1>+23%</h1>
-            <p>+5%</p>
+        <div class="metric-container">
+            <div class="metric-title">Accessibility</div>
+            <div class="metric-value">+23%</div>
+            <div class="metric-change">+5%</div>
         </div>
         """, unsafe_allow_html=True)
     with col4:
         st.markdown("""
-        <div class="metric-card">
-            <h3>Park Visits</h3>
-            <h1>+14.8%</h1>
-            <p>↑ 2.2%</p>
+        <div class="metric-container">
+            <div class="metric-title">Park Visits</div>
+            <div class="metric-value">+14.8%</div>
+            <div class="metric-change">↑ 2.2%</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -422,7 +400,7 @@ else:
     # Main chart
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.markdown("<div class='dashboard-component'>", unsafe_allow_html=True)
+        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
         st.subheader("Park Accessibility Ratings Over Time by Organization")
         months_acc, iclr_data, cerecore_data = generate_accessibility_data()
         fig_acc = go.Figure()
@@ -451,7 +429,7 @@ else:
         st.markdown("</div>", unsafe_allow_html=True)
             
     with col2:
-        st.markdown("<div class='dashboard-component'>", unsafe_allow_html=True)
+        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
         st.markdown("### Filters")
         colq4, colq5, colq6 = st.columns(3)
         with colq4:
@@ -471,7 +449,7 @@ else:
     st.subheader("Park Accessibility Statements")
     col1, col2 = st.columns([4, 1])
     with col1:
-        st.markdown("<div class='dashboard-component'>", unsafe_allow_html=True)
+        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
         statements = [
             "It is easy to physically get to the park.",
             "It is easy to find their way around the park.",
@@ -502,7 +480,7 @@ else:
         st.markdown("</div>", unsafe_allow_html=True)
             
     with col2:
-        st.markdown("<div class='dashboard-component'>", unsafe_allow_html=True)
+        st.markdown("<div class='component-container'>", unsafe_allow_html=True)
         colq4b, colq5b, colq6b = st.columns(3)
         with colq4b:
             st.button("Q4", type="secondary", key="q4b")
