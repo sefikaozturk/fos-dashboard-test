@@ -17,9 +17,7 @@ st.set_page_config(
 # Custom CSS to match the design
 st.markdown("""
 <style>
-    .main > div {
-        padding-top: 2rem;
-    }
+    
     
     /* Optimized KPI card styling - reduced padding and height */
     .metric-card, .metric-card-light {
