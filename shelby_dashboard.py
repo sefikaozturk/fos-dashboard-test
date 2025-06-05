@@ -21,14 +21,14 @@ st.markdown("""
         padding-top: 2rem;
     }
     
-    /* Fixed KPI card styling - all same size with consistent text */
+    /* Optimized KPI card styling - reduced padding and height */
     .metric-card, .metric-card-light {
         background: #4a4a4a;
         color: white;
-        padding: 1.5rem;
-        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        border-radius: 8px;
         margin-bottom: 1rem;
-        height: 120px;
+        height: 100px;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -42,21 +42,22 @@ st.markdown("""
     }
     
     .metric-card h4, .metric-card-light h4 {
-        margin: 0 0 0.5rem 0;
-        font-size: 0.85rem;
+        margin: 0 0 0.4rem 0;
+        font-size: 0.8rem;
         font-weight: 500;
         line-height: 1.2;
+        opacity: 0.9;
     }
     
     .metric-card h2, .metric-card-light h2 {
-        margin: 0 0 0.25rem 0;
-        font-size: 1.8rem;
+        margin: 0 0 0.2rem 0;
+        font-size: 1.7rem;
         font-weight: 600;
         line-height: 1.1;
     }
     
     .metric-card small, .metric-card-light small {
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         opacity: 0.8;
         margin: 0;
         line-height: 1;
@@ -64,9 +65,9 @@ st.markdown("""
     
     /* Component separation styling */
     .component-separator {
-        margin: 2rem 0;
+        margin: 1.5rem 0;
         border-bottom: 1px solid #e1e5e9;
-        padding-bottom: 1.5rem;
+        padding-bottom: 1rem;
     }
     
     .chart-container {
@@ -100,6 +101,16 @@ st.markdown("""
         margin-bottom: 2rem;
         padding-bottom: 1rem;
         border-bottom: 1px solid #e1e5e9;
+    }
+    
+    /* Reduce gap between columns */
+    .block-container {
+        padding-top: 1rem;
+    }
+    
+    /* Tighter spacing for metric cards */
+    div[data-testid="column"] {
+        padding: 0 0.5rem;
     }
 </style>
 """, unsafe_allow_html=True)
