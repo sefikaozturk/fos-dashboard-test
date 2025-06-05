@@ -117,8 +117,12 @@ st.markdown("""
 
 # Sidebar Navigation
 with st.sidebar:
+    # Add Friends of Shelby title at the top
+    st.markdown("🌲 **Friends of Shelby**")
+    st.markdown("")  # Add some spacing
+    
     st.markdown('<div class="nav-section">', unsafe_allow_html=True)
-    st.markdown("🌲 **Navigation**")
+    st.markdown("### Navigation")
     
     # Navigation buttons in sidebar
     volunteer_selected = st.button("Volunteer Program", key="nav1", use_container_width=True)
