@@ -21,7 +21,7 @@ st.markdown("""
         padding-top: 2rem;
     }
     
-    /* Fixed KPI card styling - all same size */
+    /* Fixed KPI card styling - all same size with consistent text */
     .metric-card, .metric-card-light {
         background: #4a4a4a;
         color: white;
@@ -31,7 +31,8 @@ st.markdown("""
         height: 120px;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        justify-content: center;
+        text-align: left;
     }
     
     .metric-card-light {
@@ -42,19 +43,23 @@ st.markdown("""
     
     .metric-card h4, .metric-card-light h4 {
         margin: 0 0 0.5rem 0;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         font-weight: 500;
+        line-height: 1.2;
     }
     
     .metric-card h2, .metric-card-light h2 {
-        margin: 0;
+        margin: 0 0 0.25rem 0;
         font-size: 1.8rem;
         font-weight: 600;
+        line-height: 1.1;
     }
     
     .metric-card small, .metric-card-light small {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         opacity: 0.8;
+        margin: 0;
+        line-height: 1;
     }
     
     /* Component separation styling */
@@ -488,8 +493,8 @@ else:
     col1, col2 = st.columns([3, 1])
     
     with col1:
-        with st.container():
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        chart_container = st.container(border=True)
+        with chart_container:
             st.subheader("Park Accessibility Ratings Over Time by Organization")
             
             months_acc, iclr_data, cerecore_data = generate_accessibility_data()
@@ -518,11 +523,10 @@ else:
                 yaxis=dict(range=[0, 100])
             )
             st.plotly_chart(fig_acc, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        with st.container():
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        filter_container = st.container(border=True)
+        with filter_container:
             st.markdown("### Filters")
             col_q4, col_q5, col_q6 = st.columns(3)
             with col_q4:
@@ -535,14 +539,13 @@ else:
             st.selectbox("Pick date", ["04/2025"])
             st.selectbox("Pick organization", ["ICLR, Cerecore HCA"])
             st.checkbox("Show multiple", value=True)
-            st.markdown('</div>', unsafe_allow_html=True)
     
     # Bottom section - Horizontal bar chart with proper container
     col1, col2 = st.columns([4, 1])
     
     with col1:
-        with st.container():
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        chart_container = st.container(border=True)
+        with chart_container:
             st.subheader("Park Accessibility Statements")
             
             statements = [
@@ -575,11 +578,10 @@ else:
                 margin=dict(l=300)
             )
             st.plotly_chart(fig_horiz, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        with st.container():
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        filter_container = st.container(border=True)
+        with filter_container:
             col_q4b, col_q5b, col_q6b = st.columns(3)
             with col_q4b:
                 st.button("Q4", type="secondary", key="q4b")
@@ -587,4 +589,3 @@ else:
                 st.button("Q5", type="secondary", key="q5b")
             with col_q6b:
                 st.button("Q6", type="primary", key="q6b")
-            st.markdown('</div>', unsafe_allow_html=True)
