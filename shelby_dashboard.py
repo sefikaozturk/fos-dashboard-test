@@ -183,40 +183,44 @@ if page == "Volunteer Program":
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.markdown("""
-        <div class="metric-card">
-            <h4>Total Volunteers</h4>
-            <h2>21,324</h2>
-            <small>+2,031</small>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.container():
+            st.markdown("""
+            <div style="background: #4a4a4a; color: white; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Total Volunteers</div>
+                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">21,324</div>
+                <div style="font-size: 0.72rem; opacity: 0.8;">+2,031</div>
+            </div>
+            """, unsafe_allow_html=True)
     
     with col2:
-        st.markdown("""
-        <div class="metric-card-light">
-            <h4>Total Hours</h4>
-            <h2>16,769</h2>
-            <small>+3,390</small>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.container():
+            st.markdown("""
+            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Total Hours</div>
+                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">16,769</div>
+                <div style="font-size: 0.72rem; opacity: 0.8;">+3,390</div>
+            </div>
+            """, unsafe_allow_html=True)
     
     with col3:
-        st.markdown("""
-        <div class="metric-card-light">
-            <h4>Value of The Hours</h4>
-            <h2>$221,324.50</h2>
-            <small>+$23,456</small>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.container():
+            st.markdown("""
+            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Value of The Hours</div>
+                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">$221,324.50</div>
+                <div style="font-size: 0.72rem; opacity: 0.8;">+$23,456</div>
+            </div>
+            """, unsafe_allow_html=True)
     
     with col4:
-        st.markdown("""
-        <div class="metric-card-light">
-            <h4>Change fr. Last Year</h4>
-            <h2>12.8%</h2>
-            <small>↑ 2.2%</small>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.container():
+            st.markdown("""
+            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Change fr. Last Year</div>
+                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">12.8%</div>
+                <div style="font-size: 0.72rem; opacity: 0.8;">↑ 2.2%</div>
+            </div>
+            """, unsafe_allow_html=True)
     
     # Charts row with proper containers
     col1, col2 = st.columns([2, 1])
@@ -321,31 +325,34 @@ elif page == "Restore The Forest Program":
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown("""
-        <div class="metric-card">
-            <h4>Acres Cleaned</h4>
-            <h2>1,340</h2>
-            <small>Acreage for the current month</small>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.container():
+            st.markdown("""
+            <div style="background: #4a4a4a; color: white; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Acres Cleaned</div>
+                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">1,340</div>
+                <div style="font-size: 0.72rem; opacity: 0.8;">Acreage for the current month</div>
+            </div>
+            """, unsafe_allow_html=True)
     
     with col2:
-        st.markdown("""
-        <div class="metric-card-light">
-            <h4>% of Forest Reached</h4>
-            <h2>%34</h2>
-            <small>Area % of the forest covered by RTF</small>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.container():
+            st.markdown("""
+            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">% of Forest Reached</div>
+                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">34%</div>
+                <div style="font-size: 0.72rem; opacity: 0.8;">Area % of the forest covered by RTF</div>
+            </div>
+            """, unsafe_allow_html=True)
     
     with col3:
-        st.markdown("""
-        <div class="metric-card-light">
-            <h4>Volunteers</h4>
-            <h2>76</h2>
-            <small>Volunteers participating in RTF</small>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.container():
+            st.markdown("""
+            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Volunteers</div>
+                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">76</div>
+                <div style="font-size: 0.72rem; opacity: 0.8;">Volunteers participating in RTF</div>
+            </div>
+            """, unsafe_allow_html=True)
     
     # Charts row with proper containers
     col1, col2 = st.columns([2, 1])
@@ -465,40 +472,44 @@ else:
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.markdown("""
-        <div class="metric-card">
-            <h4>Total Responses</h4>
-            <h2>25</h2>
-            <small>+2</small>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.container():
+            st.markdown("""
+            <div style="background: #4a4a4a; color: white; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Total Responses</div>
+                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">25</div>
+                <div style="font-size: 0.72rem; opacity: 0.8;">+2</div>
+            </div>
+            """, unsafe_allow_html=True)
     
     with col2:
-        st.markdown("""
-        <div class="metric-card-light">
-            <h4>% Facing Barriers</h4>
-            <h2>75%</h2>
-            <small>+3%</small>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.container():
+            st.markdown("""
+            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">% Facing Barriers</div>
+                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">75%</div>
+                <div style="font-size: 0.72rem; opacity: 0.8;">+3%</div>
+            </div>
+            """, unsafe_allow_html=True)
     
     with col3:
-        st.markdown("""
-        <div class="metric-card-light">
-            <h4>Accessibility</h4>
-            <h2>+23%</h2>
-            <small>+5%</small>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.container():
+            st.markdown("""
+            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Accessibility</div>
+                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">+23%</div>
+                <div style="font-size: 0.72rem; opacity: 0.8;">+5%</div>
+            </div>
+            """, unsafe_allow_html=True)
     
     with col4:
-        st.markdown("""
-        <div class="metric-card-light">
-            <h4>Park Visits</h4>
-            <h2>+14.8%</h2>
-            <small>↑ 2.2%</small>
-        </div>
-        """, unsafe_allow_html=True)
+        with st.container():
+            st.markdown("""
+            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Park Visits</div>
+                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">+14.8%</div>
+                <div style="font-size: 0.72rem; opacity: 0.8;">↑ 2.2%</div>
+            </div>
+            """, unsafe_allow_html=True)
     
     # Main chart with proper container
     col1, col2 = st.columns([3, 1])
