@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # Custom CSS to match the design
-st.markdown("""
+st.markdown("
 <style>
     .main > div {
         padding-top: 2rem;
