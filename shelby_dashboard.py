@@ -118,7 +118,8 @@ st.markdown("""
 # Sidebar Navigation
 with st.sidebar:
     # Add Friends of Shelby title at the top
-    st.markdown("🌲 **Friends of Shelby**")
+
+    st.markdown('<div class="sidebar-header">🌲 Friends of Shelby</div>', unsafe_allow_html=True)
     st.markdown("")
     
     st.markdown('<div class="nav-section">', unsafe_allow_html=True)
