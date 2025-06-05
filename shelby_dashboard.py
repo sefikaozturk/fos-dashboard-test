@@ -14,6 +14,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+st.markdown('<div class="stSidebarHeader">🌲 Friends of Shelby</div>', unsafe_allow_html=True)
+
 # Custom CSS to match the design
 st.markdown("""
 <style>
