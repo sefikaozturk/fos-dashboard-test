@@ -25,7 +25,7 @@ st.markdown("""
     .metric-card, .metric-card-light {
         background: #4a4a4a;
         color: white;
-        padding: 1rem;
+        padding: 1rem 1.25rem;
         border-radius: 8px;
         margin-bottom: 1rem;
         height: 100px;
