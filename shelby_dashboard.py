@@ -173,7 +173,7 @@ def generate_accessibility_data():
 # Page 1: Volunteer Program
 if page == "Volunteer Program":
     # Header
-    st.markdown('<div class="component-separator">', unsafe_allow_html=True)
+    # st.markdown('<div class="component-separator">', unsafe_allow_html=True)
     col1, col2 = st.columns([6, 2])
     with col1:
         st.title("Friends of Shelby Dashboard")
