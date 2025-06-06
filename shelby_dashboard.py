@@ -271,12 +271,13 @@ if page == "Volunteer Program":
             fig_pie.update_layout(height=400)
             st.plotly_chart(fig_pie, use_container_width=True)
     
-    # Bottom section with proper containers
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        chart_container = st.container(border=True)
-        with chart_container:
+    # Bottom section - Combined container for chart and filters
+    chart_container = st.container(border=True)
+    with chart_container:
+        # Create columns within the same container
+        col1, col2 = st.columns([3, 1])
+        
+        with col1:
             st.subheader("Volunteer Satisfaction")
             
             # Bar chart data
@@ -303,10 +304,8 @@ if page == "Volunteer Program":
                 paper_bgcolor='white'
             )
             st.plotly_chart(fig_bar, use_container_width=True)
-    
-    with col2:
-        filter_container = st.container(border=True)
-        with filter_container:
+        
+        with col2:
             st.markdown("### Filters")
             st.selectbox("Pick date", ["Overall"])
             st.selectbox("Pick organization", ["Overall"])
