@@ -516,9 +516,13 @@ else:
     # Main chart with proper container
     col1, col2 = st.columns([3, 1])
     
-    with col1:
-        chart_container = st.container(border=True)
-        with chart_container:
+    # Main chart with filters in same container
+    chart_container = st.container(border=True)
+    with chart_container:
+        # Create columns within the same container
+        col1, col2 = st.columns([3, 1])
+        
+        with col1:
             st.subheader("Park Accessibility Ratings Over Time by Organization")
             
             months_acc, iclr_data, cerecore_data = generate_accessibility_data()
@@ -547,10 +551,8 @@ else:
                 yaxis=dict(range=[0, 100])
             )
             st.plotly_chart(fig_acc, use_container_width=True)
-    
-    with col2:
-        filter_container = st.container(border=True)
-        with filter_container:
+        
+        with col2:
             st.markdown("### Filters")
             col_q4, col_q5, col_q6 = st.columns(3)
             with col_q4:
