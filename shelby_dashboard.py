@@ -570,8 +570,8 @@ else:
     col1, col2 = st.columns([4, 1])
 
     chart_container = st.container(border=True)
-        with chart_container:
-            with col1:
+    with chart_container:
+        with col1:
             st.subheader("Park Accessibility Statements")
             
             statements = [
@@ -605,13 +605,13 @@ else:
             )
             st.plotly_chart(fig_horiz, use_container_width=True)
     
-            with col2:
-                filter_container = st.container(border=True)
-                with filter_container:
-                    col_q4b, col_q5b, col_q6b = st.columns(3)
-                    with col_q4b:
-                        st.button("Q4", type="secondary", key="q4b")
-                    with col_q5b:
-                        st.button("Q5", type="secondary", key="q5b")
-                    with col_q6b:
-                        st.button("Q6", type="primary", key="q6b")
+        with col2:
+            filter_container = st.container(border=True)
+            with filter_container:
+                col_q4b, col_q5b, col_q6b = st.columns(3)
+                with col_q4b:
+                    st.button("Q4", type="secondary", key="q4b")
+                with col_q5b:
+                    st.button("Q5", type="secondary", key="q5b")
+                with col_q6b:
+                    st.button("Q6", type="primary", key="q6b")
