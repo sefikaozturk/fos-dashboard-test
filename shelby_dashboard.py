@@ -569,23 +569,27 @@ else:
     # Bottom section - Horizontal bar chart with proper container
     col1, col2 = st.columns([4, 1])
 
+    # Bottom section - Horizontal bar chart with Q4/Q5/Q6 toggle in same container
     chart_container = st.container(border=True)
     with chart_container:
+        st.subheader("Park Accessibility Statements")
+        
+        # Create columns within the same container
+        col1, col2 = st.columns([4, 1])
+        
         with col1:
-            st.subheader("Park Accessibility Statements")
-            
             statements = [
-                "It is easy to physically get to the park.",
-                "It is easy to find their way around the park.",
-                "The park has activities they want to participate in.",
-                "They see people that look like them at the park.",
-                "It is easy to find information about park activities.",
-                "It is easy for them to get equipments they need.",
+                "They feel safe at the park.",
                 "They feel welcome at the park.",
-                "They feel safe at the park."
+                "It is easy for them to get equipments they need.",
+                "It is easy to find information about park activities.",
+                "They see people that look like them at the park.",
+                "The park has activities they want to participate in.",
+                "It is easy to find their way around the park.",
+                "It is easy to physically get to the park."
             ]
             
-            values = [13, 20, 34, 36, 45, 46, 66, 80]
+            values = [80, 66, 46, 45, 36, 34, 20, 13]
             
             fig_horiz = go.Figure()
             fig_horiz.add_trace(go.Bar(
@@ -598,20 +602,21 @@ else:
             fig_horiz.update_layout(
                 height=500,
                 xaxis_title="Response Rate (%)",
+                yaxis_title="",
                 showlegend=False,
                 plot_bgcolor='white',
                 paper_bgcolor='white',
-                margin=dict(l=300)
+                margin=dict(l=300, r=50, t=50, b=50),
+                xaxis=dict(range=[0, 100])
             )
             st.plotly_chart(fig_horiz, use_container_width=True)
-    
+        
         with col2:
-            filter_container = st.container(border=True)
-            with filter_container:
-                col_q4b, col_q5b, col_q6b = st.columns(3)
-                with col_q4b:
-                    st.button("Q4", type="secondary", key="q4b")
-                with col_q5b:
-                    st.button("Q5", type="secondary", key="q5b")
-                with col_q6b:
-                    st.button("Q6", type="primary", key="q6b")
+            st.markdown("### ")  # Empty space to align with chart
+            col_q4b, col_q5b, col_q6b = st.columns(3)
+            with col_q4b:
+                st.button("Q4", type="secondary", key="q4b")
+            with col_q5b:
+                st.button("Q5", type="secondary", key="q5b")
+            with col_q6b:
+                st.button("Q6", type="primary", key="q6b")
