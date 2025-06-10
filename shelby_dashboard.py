@@ -53,25 +53,13 @@ SPREADSHEET_ID = "1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0"
 dashboard_data = load_google_sheet_data(SPREADSHEET_ID, "Overall Dashboard")
 
 # Extract metrics from the "Overall Dashboard" tab
-metrics = {}
-metric_names = ["Total Volunteers", "Total Hours", "Value of Hours", "Total Acres Cleaned", "% of Forest Reached"]
-if not dashboard_data.empty and len(dashboard_data.columns) >= 2:
-    for metric in metric_names:
-        row = dashboard_data[dashboard_data.iloc[:, 0] == metric]
-        if not row.empty:
-            metrics[metric] = row.iloc[:, 1].iloc[0]
-        else:
-            st.warning(f"Metric '{metric}' not found in Overall Dashboard")
-            metrics[metric] = None
-else:
-    st.warning("Overall Dashboard data is empty or malformed")
-    metrics = {
-        "Total Volunteers": 250,
-        "Total Hours": 1200,
-        "Value of Hours": 30000,
-        "Total Acres Cleaned": 150,
-        "% of Forest Reached": 15
-    }
+metrics = {
+    "Total Volunteers": float(dashboard_data[dashboard_data.iloc[:, 0] == "Total Volunteers"].iloc[:, 1].iloc[0]) if not dashboard_data.empty and not dashboard_data[dashboard_data.iloc[:, 0] == "Total Volunteers"].empty else 250,
+    "Total Hours": float(dashboard_data[dashboard_data.iloc[:, 0] == "Total Hours"].iloc[:, 1].iloc[0]) if not dashboard_data.empty and not dashboard_data[dashboard_data.iloc[:, 0] == "Total Hours"].empty else 1200,
+    "Value of Hours": float(dashboard_data[dashboard_data.iloc[:, 0] == "Value of Hours"].iloc[:, 1].iloc[0]) if not dashboard_data.empty and not dashboard_data[dashboard_data.iloc[:, 0] == "Value of Hours"].empty else 30000,
+    "Total Acres Cleaned": float(dashboard_data[dashboard_data.iloc[:, 0] == "Total Acres Cleaned"].iloc[:, 1].iloc[0]) if not dashboard_data.empty and not dashboard_data[dashboard_data.iloc[:, 0] == "Total Acres Cleaned"].empty else 150,
+    "% of Forest Reached": float(dashboard_data[dashboard_data.iloc[:, 0] == "% of Forest Reached"].iloc[:, 1].iloc[0]) if not dashboard_data.empty and not dashboard_data[dashboard_data.iloc[:, 0] == "% of Forest Reached"].empty else 15
+}
 
 # Metrics
 st.header("Key Metrics")
