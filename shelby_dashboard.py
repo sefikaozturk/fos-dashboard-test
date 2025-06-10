@@ -4,16 +4,24 @@ import pandas as pd
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
+
 # Function to load Google Sheet data
+@st.cache_data
 def load_google_sheet_data(spreadsheet_id, sheet_name):
-    scope = ['https://www.googleapis.com/auth/spreadsheets', 
-             'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name('arcgis-fos-a2e12f56c5d8.json', scope)
-    client = gspread.authorize(creds)
-    spreadsheet = client.open_by_key(spreadsheet_id)
-    sheet = spreadsheet.worksheet(sheet_name)
-    data = sheet.get_all_records()
-    return pd.DataFrame(data)
+    try:
+        scope = ['https://www.googleapis.com/auth/spreadsheets', 
+                 'https://www.googleapis.com/auth/drive']
+        # Use Streamlit secrets for credentials
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(st.secrets["gcp_service_account"], scope)
+        client = gspread.authorize(creds)
+        spreadsheet = client.open_by_key(spreadsheet_id)
+        sheet = spreadsheet.worksheet(sheet_name)
+        data = sheet.get_all_records()
+        return pd.DataFrame(data)
+    except Exception as e:
+        st.error(f"Error loading data from {sheet_name}: {e}")
+        return pd.DataFrame()
+
 
 # Custom CSS for styling
 st.markdown("""
