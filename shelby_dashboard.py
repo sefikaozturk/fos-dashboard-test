@@ -36,7 +36,9 @@ def load_google_sheet_data(spreadsheet_id, sheet_name):
         spreadsheet = client.open_by_key(spreadsheet_id)
         sheet = spreadsheet.worksheet(sheet_name)
         data = sheet.get_all_records()
-        return pd.DataFrame(data)
+        df = pd.DataFrame(data)
+        st.write(f"Loaded data from {sheet_name} with columns: {df.columns.tolist()}")
+        return df
     except Exception as e:
         st.error(f"Error loading data from {sheet_name}: {e}")
         return pd.DataFrame()
@@ -51,13 +53,25 @@ SPREADSHEET_ID = "1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0"
 dashboard_data = load_google_sheet_data(SPREADSHEET_ID, "Overall Dashboard")
 
 # Extract metrics from the "Overall Dashboard" tab
-metrics = {
-    "Total Volunteers": dashboard_data[dashboard_data['Single Value Metrics'] == 'Total Volunteers'][''].iloc[0] if not dashboard_data[dashboard_data['Single Value Metrics'] == 'Total Volunteers'].empty else 250,
-    "Total Hours": dashboard_data[dashboard_data['Single Value Metrics'] == 'Total Hours'][''].iloc[0] if not dashboard_data[dashboard_data['Single Value Metrics'] == 'Total Hours'].empty else 1200,
-    "Value of Hours": dashboard_data[dashboard_data['Single Value Metrics'] == 'Value of Hours'][''].iloc[0] if not dashboard_data[dashboard_data['Single Value Metrics'] == 'Value of Hours'].empty else 30000,
-    "Total Acres Cleaned": dashboard_data[dashboard_data['Single Value Metrics'] == 'Total Acres Cleaned'][''].iloc[0] if not dashboard_data[dashboard_data['Single Value Metrics'] == 'Total Acres Cleaned'].empty else 150,
-    "% of Forest Reached": dashboard_data[dashboard_data['Single Value Metrics'] == '% of Forest Reached'][''].iloc[0] if not dashboard_data[dashboard_data['Single Value Metrics'] == '% of Forest Reached'].empty else 15,
-}
+metrics = {}
+metric_names = ["Total Volunteers", "Total Hours", "Value of Hours", "Total Acres Cleaned", "% of Forest Reached"]
+if not dashboard_data.empty and len(dashboard_data.columns) >= 2:
+    for metric in metric_names:
+        row = dashboard_data[dashboard_data.iloc[:, 0] == metric]
+        if not row.empty:
+            metrics[metric] = row.iloc[:, 1].iloc[0]
+        else:
+            st.warning(f"Metric '{metric}' not found in Overall Dashboard")
+            metrics[metric] = None
+else:
+    st.warning("Overall Dashboard data is empty or malformed")
+    metrics = {
+        "Total Volunteers": 250,
+        "Total Hours": 1200,
+        "Value of Hours": 30000,
+        "Total Acres Cleaned": 150,
+        "% of Forest Reached": 15
+    }
 
 # Metrics
 st.header("Key Metrics")
