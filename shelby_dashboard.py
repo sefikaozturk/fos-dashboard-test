@@ -4,6 +4,114 @@ import pandas as pd
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
+# Page config
+st.set_page_config(
+    page_title="Friends of Shelby Dashboard", 
+    page_icon="🌲", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Custom CSS to match the design
+st.markdown("""
+<style>
+    .main > div {
+        padding-top: 2rem;
+    }
+    
+    /* Optimized KPI card styling - reduced padding and height */
+    .metric-card, .metric-card-light {
+        background: #4a4a4a;
+        color: white;
+        padding: 1rem 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: left;
+    }
+    
+    .metric-card-light {
+        background: #f0f2f6;
+        color: #333;
+        border: 1px solid #e1e5e9;
+    }
+    
+    .metric-card h4, .metric-card-light h4 {
+        margin: 0 0 0.4rem 0;
+        font-size: 0.8rem;
+        font-weight: 500;
+        line-height: 1.2;
+        opacity: 0.9;
+    }
+    
+    .metric-card h2, .metric-card-light h2 {
+        margin: 0 0 0.2rem 0;
+        font-size: 1.7rem;
+        font-weight: 600;
+        line-height: 1.1;
+    }
+    
+    .metric-card small, .metric-card-light small {
+        font-size: 0.72rem;
+        opacity: 0.8;
+        margin: 0;
+        line-height: 1;
+    }
+    
+    /* Component separation styling */
+    .component-separator {
+        margin: 1rem 0;
+        #border-bottom: 1px solid #e1e5e9;
+        padding-bottom: 1rem;
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        border: 1px solid #e1e5e9;
+    }
+    
+    .stSelectbox > div > div {
+        background-color: white;
+    }
+    
+    .sidebar .sidebar-content {
+        background-color: #4a4a4a;
+    }
+    
+    h1 {
+        color: #333;
+        font-weight: 600;
+    }
+    h3 {
+        color: #666;
+        font-weight: 500;
+    }
+    
+    /* Sidebar navigation styling */
+    .nav-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e1e5e9;
+    }
+    
+    /* Reduce gap between columns */
+    .block-container {
+        padding-top: 1rem;
+    }
+    
+    /* Tighter spacing for metric cards */
+    div[data-testid="column"] {
+        padding: 0 0.5rem;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Function to load Google Sheet data
 @st.cache_data
@@ -11,7 +119,6 @@ def load_google_sheet_data(spreadsheet_id, sheet_name):
     try:
         scope = ['https://www.googleapis.com/auth/spreadsheets', 
                  'https://www.googleapis.com/auth/drive']
-        # Use Streamlit secrets for credentials
         creds = ServiceAccountCredentials.from_json_keyfile_dict(st.secrets["gcp_service_account"], scope)
         client = gspread.authorize(creds)
         spreadsheet = client.open_by_key(spreadsheet_id)
@@ -21,83 +128,6 @@ def load_google_sheet_data(spreadsheet_id, sheet_name):
     except Exception as e:
         st.error(f"Error loading data from {sheet_name}: {e}")
         return pd.DataFrame()
-
-
-# Custom CSS for styling
-st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Montserrat:wght@600&display=swap');
-    
-    body {
-        font-family: 'Roboto', sans-serif;
-        background-color: #F5F5F5;
-    }
-    .stApp {
-        background-color: #F5F5F5;
-    }
-    h1, h2, h3 {
-        font-family: 'Montserrat', sans-serif;
-        color: #2E7D32;
-    }
-    .metric-card {
-        background-color: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        text-align: center;
-    }
-    .metric-title {
-        font-size: 16px;
-        color: #555;
-        margin-bottom: 10px;
-    }
-    .metric-value {
-        font-size: 24px;
-        font-weight: bold;
-        color: #2E7D32;
-    }
-    .metric-delta {
-        font-size: 14px;
-        color: #F44336;
-    }
-    .sidebar .sidebar-content {
-        background-color: #FFFFFF;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    .stButton>button {
-        background-color: #4CAF50;
-        color: white;
-        border-radius: 5px;
-        padding: 10px 20px;
-        font-family: 'Roboto', sans-serif;
-        border: none;
-    }
-    .stButton>button:hover {
-        background-color: #45a049;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# Streamlit page configuration
-st.set_page_config(
-    page_title="Friends of Shelby Partnership",
-    page_icon="🌳",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Sidebar
-with st.sidebar:
-    st.image("https://via.placeholder.com/150x50.png?text=Logo", use_column_width=True)
-    st.markdown("## Navigation")
-    st.markdown("[About Us](https://www.example.com/about)")
-    st.markdown("[Volunteer Opportunities](https://www.example.com/volunteer)")
-    st.markdown("[Contact Us](https://www.example.com/contact)")
-    st.markdown("---")
-    if st.button("Refresh Data"):
-        st.experimental_rerun()
 
 # Title
 st.markdown("<h1 style='text-align: center;'>🌳 Friends of Shelby Partnership Volunteer Dashboard</h1>", unsafe_allow_html=True)
