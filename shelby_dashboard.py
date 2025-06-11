@@ -18,67 +18,261 @@ st.set_page_config(
 
 # Function to fetch real data from Google Sheets
 @st.cache_data(ttl=300)  # Cache for 5 minutes
-def fetch_real_data():
-    """Fetch real data from Google Sheets"""
+def fetch_google_sheets_data():
+    """Fetch ALL data from Google Sheets - no fallbacks"""
     try:
-        # Your Google Sheets CSV export URL
-        sheet_url = "https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=433779691"
+        # Main data sheet
+        main_sheet_url = "https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=433779691"
         
-        # Try to fetch the data
-        response = requests.get(sheet_url)
-        if response.status_code == 200:
-            # Parse CSV data
-            csv_data = StringIO(response.text)
-            df = pd.read_csv(csv_data)
-            
-            # Extract metrics (assuming they're in specific rows as shown in your sheet)
-            metrics = {
-                'total_volunteers': 891,
-                'total_hours': 2272.5,
-                'value_of_hours': 79060.28,
-                'change_from_last_year': 0,
-                'total_acres_cleaned': 2.615825,
-                'percent_forest_reached': 0.2615825,
-                'total_rtf_volunteers': 28,
-                'total_rtf_hours': 20.93,
-                'total_survey_responses': 16,
-                'percent_facing_barriers': 43.125,
-                'percent_change_accessibility': 69.725,
-                'percent_change_park_visits': 71.25
-            }
-            return metrics
-        else:
-            return None
+        # Additional sheets for different data types
+        sheet_urls = {
+            'main_metrics': main_sheet_url,
+            'volunteer_trends': f"https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=0",
+            'forest_data': f"https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=1", 
+            'accessibility_data': f"https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=2",
+            'survey_data': f"https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=3"
+        }
+        
+        all_data = {}
+        
+        for sheet_name, url in sheet_urls.items():
+            try:
+                response = requests.get(url, timeout=15)
+                if response.status_code == 200:
+                    csv_data = StringIO(response.text)
+                    df = pd.read_csv(csv_data)
+                    
+                    # Clean column names
+                    df.columns = df.columns.str.strip()
+                    
+                    # Remove completely empty rows and columns
+                    df = df.dropna(how='all').dropna(axis=1, how='all')
+                    
+                    all_data[sheet_name] = df
+                else:
+                    st.error(f"Failed to fetch {sheet_name}: HTTP {response.status_code}")
+                    all_data[sheet_name] = None
+                    
+            except Exception as e:
+                st.error(f"Error fetching {sheet_name}: {str(e)}")
+                all_data[sheet_name] = None
+        
+        return all_data
+        
     except Exception as e:
-        st.error(f"Error fetching data: {str(e)}")
+        st.error(f"Critical error fetching Google Sheets data: {str(e)}")
         return None
 
-# Get real data or fallback to default values
-real_data = fetch_real_data()
-if real_data is None:
-    # Fallback to your actual values from the sheet
-    real_data = {
-        'total_volunteers': 891,
-        'total_hours': 2272.5,
-        'value_of_hours': 79060.28,
-        'change_from_last_year': 0,
-        'total_acres_cleaned': 2.615825,
-        'percent_forest_reached': 0.2615825,
-        'total_rtf_volunteers': 28,
-        'total_rtf_hours': 20.93,
-        'total_survey_responses': 16,
-        'percent_facing_barriers': 43.125,
-        'percent_change_accessibility': 69.725,
-        'percent_change_park_visits': 71.25
-    }
+# Function to extract metrics from the main data sheet
+def extract_metrics(sheets_data):
+    """Extract key metrics from Google Sheets data"""
+    if not sheets_data or 'main_metrics' not in sheets_data or sheets_data['main_metrics'] is None:
+        st.error("Main metrics data not available from Google Sheets")
+        return {}
+    
+    df = sheets_data['main_metrics']
+    metrics = {}
+    
+    try:
+        # Method 1: If data is in key-value pairs format
+        if 'Metric' in df.columns and 'Value' in df.columns:
+            for _, row in df.iterrows():
+                if pd.notna(row['Metric']) and pd.notna(row['Value']):
+                    key = str(row['Metric']).strip().lower().replace(' ', '_').replace('%', 'percent')
+                    value = pd.to_numeric(row['Value'], errors='coerce')
+                    if pd.notna(value):
+                        metrics[key] = value
+        
+        # Method 2: If metrics are in column headers with values below
+        else:
+            for col in df.columns:
+                if col.strip():
+                    clean_col = col.strip().lower().replace(' ', '_').replace('%', 'percent')
+                    # Get first non-null numeric value from the column
+                    col_values = pd.to_numeric(df[col], errors='coerce').dropna()
+                    if len(col_values) > 0:
+                        metrics[clean_col] = col_values.iloc[0]
+        
+        # Method 3: Look for specific patterns in cell values
+        if not metrics:
+            # Search through all cells for recognizable patterns
+            for col in df.columns:
+                for idx, value in df[col].items():
+                    if pd.notna(value):
+                        str_val = str(value).strip()
+                        # Look for patterns like "Total Volunteers: 891"
+                        if ':' in str_val:
+                            parts = str_val.split(':', 1)
+                            if len(parts) == 2:
+                                key = parts[0].strip().lower().replace(' ', '_')
+                                val = pd.to_numeric(parts[1].strip(), errors='coerce')
+                                if pd.notna(val):
+                                    metrics[key] = val
+        
+    except Exception as e:
+        st.error(f"Error extracting metrics: {str(e)}")
+    
+    return metrics
 
-# Custom CSS to match the design
+# Function to get volunteer trend data from sheets
+def get_volunteer_trends(sheets_data):
+    """Extract volunteer trend data from Google Sheets"""
+    if not sheets_data or 'volunteer_trends' not in sheets_data or sheets_data['volunteer_trends'] is None:
+        st.warning("Volunteer trends data not available from Google Sheets")
+        return None, None
+    
+    df = sheets_data['volunteer_trends']
+    
+    try:
+        # Look for month/date column
+        month_col = None
+        for col in df.columns:
+            if any(keyword in col.lower() for keyword in ['month', 'date', 'time', 'period']):
+                month_col = col
+                break
+        
+        if month_col is None:
+            st.warning("No month/date column found in volunteer trends data")
+            return None, None
+        
+        months = df[month_col].dropna().tolist()
+        activities = {}
+        
+        # Get all other numeric columns as activities
+        for col in df.columns:
+            if col != month_col:
+                numeric_data = pd.to_numeric(df[col], errors='coerce').fillna(0)
+                if numeric_data.sum() > 0:  # Only include if there's actual data
+                    activities[col] = numeric_data.tolist()
+        
+        return months, activities
+        
+    except Exception as e:
+        st.error(f"Error processing volunteer trends: {str(e)}")
+        return None, None
+
+# Function to get forest restoration data
+def get_forest_data(sheets_data):
+    """Extract forest restoration data from Google Sheets"""
+    if not sheets_data or 'forest_data' not in sheets_data or sheets_data['forest_data'] is None:
+        st.warning("Forest data not available from Google Sheets")
+        return None, None
+    
+    df = sheets_data['forest_data']
+    
+    try:
+        # Look for month and acres columns
+        month_col = None
+        acres_col = None
+        
+        for col in df.columns:
+            col_lower = col.lower()
+            if any(keyword in col_lower for keyword in ['month', 'date', 'time', 'period']):
+                month_col = col
+            elif any(keyword in col_lower for keyword in ['acre', 'area', 'cleaned', 'restored']):
+                acres_col = col
+        
+        if month_col is None or acres_col is None:
+            st.warning("Month or acres column not found in forest data")
+            return None, None
+        
+        months = df[month_col].dropna().tolist()
+        acres = pd.to_numeric(df[acres_col], errors='coerce').fillna(0).tolist()
+        
+        return months, acres
+        
+    except Exception as e:
+        st.error(f"Error processing forest data: {str(e)}")
+        return None, None
+
+# Function to get accessibility data
+def get_accessibility_data(sheets_data):
+    """Extract accessibility data from Google Sheets"""
+    if not sheets_data or 'accessibility_data' not in sheets_data or sheets_data['accessibility_data'] is None:
+        st.warning("Accessibility data not available from Google Sheets")
+        return None, None
+    
+    df = sheets_data['accessibility_data']
+    
+    try:
+        # Look for month column
+        month_col = None
+        for col in df.columns:
+            if any(keyword in col.lower() for keyword in ['month', 'date', 'time', 'period']):
+                month_col = col
+                break
+        
+        if month_col is None:
+            st.warning("No month column found in accessibility data")
+            return None, None
+        
+        months = df[month_col].dropna().tolist()
+        org_data = {}
+        
+        # Get organization columns
+        for col in df.columns:
+            if col != month_col:
+                numeric_data = pd.to_numeric(df[col], errors='coerce').fillna(0)
+                if numeric_data.sum() > 0:
+                    org_data[col] = numeric_data.tolist()
+        
+        return months, org_data
+        
+    except Exception as e:
+        st.error(f"Error processing accessibility data: {str(e)}")
+        return None, None
+
+# Function to get survey statements data
+def get_survey_statements(sheets_data):
+    """Extract survey statements data from Google Sheets"""
+    if not sheets_data or 'survey_data' not in sheets_data or sheets_data['survey_data'] is None:
+        st.warning("Survey data not available from Google Sheets")
+        return None, None
+    
+    df = sheets_data['survey_data']
+    
+    try:
+        # Look for statement and percentage columns
+        statement_col = None
+        percentage_col = None
+        
+        for col in df.columns:
+            col_lower = col.lower()
+            if any(keyword in col_lower for keyword in ['statement', 'question', 'text', 'description']):
+                statement_col = col
+            elif any(keyword in col_lower for keyword in ['percent', 'rate', 'score', 'value', '%']):
+                percentage_col = col
+        
+        if statement_col is None or percentage_col is None:
+            st.warning("Statement or percentage column not found in survey data")
+            return None, None
+        
+        statements = df[statement_col].dropna().tolist()
+        percentages = pd.to_numeric(df[percentage_col], errors='coerce').fillna(0).tolist()
+        
+        return statements, percentages
+        
+    except Exception as e:
+        st.error(f"Error processing survey data: {str(e)}")
+        return None, None
+
+# Fetch all data from Google Sheets
+with st.spinner("Loading data from Google Sheets..."):
+    sheets_data = fetch_google_sheets_data()
+
+if sheets_data is None:
+    st.error("❌ Cannot load dashboard - Google Sheets data unavailable")
+    st.stop()
+
+# Extract metrics
+metrics = extract_metrics(sheets_data)
+
+# Custom CSS
 st.markdown("""
 <style>
 .main > div {
     padding-top: 2rem;
 }
-/* Optimized KPI card styling - reduced padding and height */
 .metric-card, .metric-card-light {
     background: #4a4a4a;
     color: white;
@@ -115,10 +309,8 @@ st.markdown("""
     margin: 0;
     line-height: 1;
 }
-/* Component separation styling */
 .component-separator {
     margin: 1rem 0;
-    #border-bottom: 1px solid #e1e5e9;
     padding-bottom: 1rem;
 }
 .chart-container {
@@ -132,9 +324,6 @@ st.markdown("""
 .stSelectbox > div > div {
     background-color: white;
 }
-.sidebar .sidebar-content {
-    background-color: #4a4a4a;
-}
 h1 {
     color: #333;
     font-weight: 600;
@@ -143,17 +332,14 @@ h3 {
     color: #666;
     font-weight: 500;
 }
-/* Sidebar navigation styling */
 .nav-section {
     margin-bottom: 2rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid #e1e5e9;
 }
-/* Reduce gap between columns */
 .block-container {
     padding-top: 1rem;
 }
-/* Tighter spacing for metric cards */
 div[data-testid="column"] {
     padding: 0 0.5rem;
 }
@@ -162,27 +348,34 @@ div[data-testid="column"] {
 
 # Sidebar Navigation
 with st.sidebar:
-    # Add Friends of Shelby title at the top
     st.markdown("🌲 **Friends of Shelby**")
     st.markdown('<div class="nav-section">', unsafe_allow_html=True)
     st.markdown("### Navigation")
     
-    # Navigation buttons in sidebar
     volunteer_selected = st.button("Volunteer Program", key="nav1", use_container_width=True)
     forest_selected = st.button("Restore The Forest Program", key="nav2", use_container_width=True)
     strategic_selected = st.button("Strategic Plan - Pillar 1", key="nav3", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Filters section
     st.markdown("### General Filters")
     st.selectbox("Date Range", ["Last Month", "Last 3 Months", "Last Year"], key="sidebar_date")
     st.selectbox("Organization", ["All", "ICLR", "Cerecore HCA"], key="sidebar_org")
     st.multiselect("Metrics to Show", ["Volunteers", "Hours", "Accessibility", "Satisfaction"], key="sidebar_metrics")
     
-    # Data refresh button
     if st.button("🔄 Refresh Data", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
+
+# Show data status
+if sheets_data:
+    st.sidebar.success(f"✅ Data loaded from Google Sheets")
+    if st.sidebar.button("Show Raw Data", key="show_raw"):
+        st.sidebar.write("**Available sheets:**")
+        for sheet_name, df in sheets_data.items():
+            if df is not None:
+                st.sidebar.write(f"- {sheet_name}: {len(df)} rows")
+            else:
+                st.sidebar.write(f"- {sheet_name}: ❌ Failed to load")
 
 # Determine which page to show
 if 'current_page' not in st.session_state:
@@ -197,29 +390,23 @@ elif strategic_selected:
 
 page = st.session_state.current_page
 
-# Sample data generation (keeping for charts that don't have real data yet)
-def generate_volunteer_data():
-    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May']
-    invasive_removal = [45, 55, 65, 45, 35]
-    trail_maintenance = [35, 75, 55, 65, 45]
-    painting = [25, 45, 55, 85, 65]
-    lake_cleaning = [55, 35, 45, 75, 55]
-    return months, invasive_removal, trail_maintenance, painting, lake_cleaning
-
-def generate_forest_data():
-    months = ['Jan', 'Feb', 'March', 'April', 'May', 'June', 'July']
-    acres_data = [0.2, 0.15, 0.16, 0.17, 0.13, 0.19, 0.17]  # Scaled to match real data
-    return months, acres_data
-
-def generate_accessibility_data():
-    months = ['01/25', '02/25', '03/25', '04/25', '05/25', '06/25', '07/25', '08/25']
-    iclr = [30, 58, 43, 30, 20, 55, 25, 68]
-    cerecore = [85, 82, 65, 55, 75, 60, 54, 60]
-    return months, iclr, cerecore
+# Helper function to safely get metric value
+def get_metric_value(key, format_type="number"):
+    value = metrics.get(key)
+    if value is None or pd.isna(value):
+        return "No Data"
+    
+    if format_type == "currency":
+        return f"${value:,.2f}"
+    elif format_type == "percentage":
+        return f"{value:.1f}%"
+    elif format_type == "decimal":
+        return f"{value:.2f}"
+    else:
+        return f"{value:,.0f}" if value >= 1 else f"{value:.3f}"
 
 # Page 1: Volunteer Program
 if page == "Volunteer Program":
-    # Header
     st.markdown('<div class="component-separator">', unsafe_allow_html=True)
     col1, col2 = st.columns([6, 2])
     with col1:
@@ -229,135 +416,113 @@ if page == "Volunteer Program":
         st.markdown("**Sefika Ozturk** - *Admin*")
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Top metrics row with REAL DATA
+    # Top metrics row - ONLY from Google Sheets
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        with st.container():
-            st.markdown(f"""
-            <div style="background: #4a4a4a; color: white; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Total Volunteers</div>
-                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{real_data['total_volunteers']:,}</div>
-                <div style="font-size: 0.72rem; opacity: 0.8;">Real Data</div>
-            </div>
-            """, unsafe_allow_html=True)
+        total_volunteers = get_metric_value('total_volunteers')
+        st.markdown(f"""
+        <div style="background: #4a4a4a; color: white; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center;">
+            <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Total Volunteers</div>
+            <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{total_volunteers}</div>
+            <div style="font-size: 0.72rem; opacity: 0.8;">From Google Sheets</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col2:
-        with st.container():
-            st.markdown(f"""
-            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
-                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Total Hours</div>
-                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{real_data['total_hours']:,.1f}</div>
-                <div style="font-size: 0.72rem; opacity: 0.8;">Real Data</div>
-            </div>
-            """, unsafe_allow_html=True)
+        total_hours = get_metric_value('total_hours', 'decimal')
+        st.markdown(f"""
+        <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+            <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Total Hours</div>
+            <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{total_hours}</div>
+            <div style="font-size: 0.72rem; opacity: 0.8;">From Google Sheets</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col3:
-        with st.container():
-            st.markdown(f"""
-            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
-                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Value of The Hours</div>
-                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">${real_data['value_of_hours']:,.2f}</div>
-                <div style="font-size: 0.72rem; opacity: 0.8;">Real Data</div>
-            </div>
-            """, unsafe_allow_html=True)
+        value_hours = get_metric_value('value_of_hours', 'currency')
+        st.markdown(f"""
+        <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+            <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Value of The Hours</div>
+            <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{value_hours}</div>
+            <div style="font-size: 0.72rem; opacity: 0.8;">From Google Sheets</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col4:
-        change_display = f"{real_data['change_from_last_year']:.1f}%" if real_data['change_from_last_year'] != 0 else "No Change"
-        with st.container():
-            st.markdown(f"""
-            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
-                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Change fr. Last Year</div>
-                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{change_display}</div>
-                <div style="font-size: 0.72rem; opacity: 0.8;">Real Data</div>
-            </div>
-            """, unsafe_allow_html=True)
+        change_value = get_metric_value('change_from_last_year', 'percentage')
+        st.markdown(f"""
+        <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+            <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Change fr. Last Year</div>
+            <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{change_value}</div>
+            <div style="font-size: 0.72rem; opacity: 0.8;">From Google Sheets</div>
+        </div>
+        """, unsafe_allow_html=True)
     
-    # Charts row with proper containers (keeping sample data for visualization)
+    # Charts row - ONLY from Google Sheets
     col1, col2 = st.columns([2, 1])
     
     with col1:
         chart_container = st.container(border=True)
         with chart_container:
             st.subheader("Volunteer Participation Trends Over Time")
-            months, invasive, trail, painting, lake = generate_volunteer_data()
             
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=months, y=invasive, name='Invasive Removal', line=dict(color='#333')))
-            fig.add_trace(go.Scatter(x=months, y=trail, name='Trail Maintenance', line=dict(color='#666')))
-            fig.add_trace(go.Scatter(x=months, y=painting, name='Painting', line=dict(color='#999')))
-            fig.add_trace(go.Scatter(x=months, y=lake, name='Lake Cleaning', line=dict(color='#ccc')))
+            months, activities = get_volunteer_trends(sheets_data)
             
-            fig.update_layout(
-                showlegend=True,
-                height=400,
-                xaxis_title="",
-                yaxis_title="",
-                plot_bgcolor='white',
-                paper_bgcolor='white'
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            if months and activities:
+                fig = go.Figure()
+                colors = ['#333', '#666', '#999', '#ccc']
+                
+                for i, (activity_name, activity_data) in enumerate(activities.items()):
+                    fig.add_trace(go.Scatter(
+                        x=months[:len(activity_data)], 
+                        y=activity_data[:len(months)], 
+                        name=activity_name,
+                        line=dict(color=colors[i % len(colors)])
+                    ))
+                
+                fig.update_layout(
+                    showlegend=True,
+                    height=400,
+                    xaxis_title="",
+                    yaxis_title="",
+                    plot_bgcolor='white',
+                    paper_bgcolor='white'
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.warning("⚠️ Volunteer trends data not available from Google Sheets")
     
     with col2:
         chart_container = st.container(border=True)
         with chart_container:
             st.subheader("Popular Events")
-            # Pie chart
-            labels = ['Trail Main...', 'Invasive ...', 'Pai...']
-            values = [40, 35, 25]
-            colors = ['#f4d03f', '#d5b895', '#a6a6a6']
             
-            fig_pie = go.Figure(data=[go.Pie(
-                labels=labels,
-                values=values,
-                hole=0.5,
-                marker_colors=colors,
-                showlegend=True
-            )])
-            fig_pie.update_layout(height=400)
-            st.plotly_chart(fig_pie, use_container_width=True)
-    
-    # Bottom section - Combined container for chart and filters
-    chart_container = st.container(border=True)
-    with chart_container:
-        # Create columns within the same container
-        col1, col2 = st.columns([3, 1])
-        
-        with col1:
-            st.subheader("Volunteer Satisfaction")
-            # Bar chart data
-            categories = ['Invasive Removal', 'Trail Maintenance', 'Painting', 'Lake Cleaning']
-            months_bar = ['Jan', 'Feb', 'Mar', 'Apr', 'May']
+            # Try to create pie chart from volunteer trends data
+            months, activities = get_volunteer_trends(sheets_data)
             
-            fig_bar = go.Figure()
-            # Add bars for each month
-            for i, month in enumerate(months_bar):
-                values = np.random.randint(60, 90, len(categories))
-                fig_bar.add_trace(go.Bar(
-                    name=month,
-                    x=categories,
-                    y=values,
-                    marker_color=['#333', '#666', '#999', '#ccc'][i % 4]
-                ))
-            
-            fig_bar.update_layout(
-                barmode='group',
-                height=400,
-                showlegend=False,
-                plot_bgcolor='white',
-                paper_bgcolor='white'
-            )
-            st.plotly_chart(fig_bar, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Filters")
-            st.selectbox("Pick date", ["Overall"])
-            st.selectbox("Pick organization", ["Overall"])
-            st.checkbox("Show multiple")
+            if activities:
+                # Sum up activities to show popularity
+                activity_totals = {name: sum(data) for name, data in activities.items()}
+                
+                labels = list(activity_totals.keys())
+                values = list(activity_totals.values())
+                colors = ['#f4d03f', '#d5b895', '#a6a6a6', '#333']
+                
+                fig_pie = go.Figure(data=[go.Pie(
+                    labels=labels,
+                    values=values,
+                    hole=0.5,
+                    marker_colors=colors[:len(labels)],
+                    showlegend=True
+                )])
+                fig_pie.update_layout(height=400)
+                st.plotly_chart(fig_pie, use_container_width=True)
+            else:
+                st.warning("⚠️ Event popularity data not available from Google Sheets")
 
 # Page 2: Restore The Forest Program
 elif page == "Restore The Forest Program":
-    # Header
     st.markdown('<div class="component-separator">', unsafe_allow_html=True)
     col1, col2 = st.columns([6, 2])
     with col1:
@@ -367,142 +532,85 @@ elif page == "Restore The Forest Program":
         st.markdown("**Renee McKelvey** - *Community Member*")
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Top metrics with REAL DATA
+    # Top metrics - ONLY from Google Sheets
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        with st.container():
-            st.markdown(f"""
-            <div style="background: #4a4a4a; color: white; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Acres Cleaned</div>
-                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{real_data['total_acres_cleaned']:.2f}</div>
-                <div style="font-size: 0.72rem; opacity: 0.8;">Real Data - Current Total</div>
-            </div>
-            """, unsafe_allow_html=True)
+        acres_cleaned = get_metric_value('total_acres_cleaned', 'decimal')
+        st.markdown(f"""
+        <div style="background: #4a4a4a; color: white; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center;">
+            <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Acres Cleaned</div>
+            <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{acres_cleaned}</div>
+            <div style="font-size: 0.72rem; opacity: 0.8;">From Google Sheets</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col2:
-        with st.container():
-            st.markdown(f"""
-            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
-                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">% of Forest Reached</div>
-                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{real_data['percent_forest_reached']:.2f}%</div>
-                <div style="font-size: 0.72rem; opacity: 0.8;">Real Data - Forest Coverage</div>
-            </div>
-            """, unsafe_allow_html=True)
+        forest_percent = get_metric_value('percent_forest_reached', 'percentage')
+        st.markdown(f"""
+        <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+            <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">% of Forest Reached</div>
+            <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{forest_percent}</div>
+            <div style="font-size: 0.72rem; opacity: 0.8;">From Google Sheets</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col3:
-        with st.container():
-            st.markdown(f"""
-            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
-                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">RTF Volunteers</div>
-                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{real_data['total_rtf_volunteers']}</div>
-                <div style="font-size: 0.72rem; opacity: 0.8;">Real Data - Active Volunteers</div>
-            </div>
-            """, unsafe_allow_html=True)
+        rtf_volunteers = get_metric_value('total_rtf_volunteers')
+        st.markdown(f"""
+        <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">  
+            <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">RTF Volunteers</div>
+            <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{rtf_volunteers}</div>
+            <div style="font-size: 0.72rem; opacity: 0.8;">From Google Sheets</div>
+        </div>
+        """, unsafe_allow_html=True)
     
-    # Charts row with proper containers
+    # Charts - ONLY from Google Sheets
     col1, col2 = st.columns([2, 1])
     
     with col1:
         chart_container = st.container(border=True)
         with chart_container:
             st.subheader("Acres Cleaned Over Time")
-            # Line chart with scaled data based on real totals
-            months_long = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'August']
-            # Scale sample data to reflect real total
-            scale_factor = real_data['total_acres_cleaned'] / 8  # Distribute across 8 months
-            data_2024 = [scale_factor * 0.8, scale_factor * 0.6, scale_factor * 0.4, scale_factor * 0.9, 
-                         scale_factor * 0.6, scale_factor * 0.4, scale_factor * 0.3, scale_factor * 0.8]
-            data_2025 = [scale_factor * 0.5, scale_factor * 0.5, scale_factor * 0.4, scale_factor * 0.7, 
-                         scale_factor * 0.5, scale_factor * 0.7, scale_factor * 0.2, scale_factor * 1.0]
             
-            fig_line = go.Figure()
-            fig_line.add_trace(go.Scatter(x=months_long, y=data_2024, name='2024', line=dict(color='#333')))
-            fig_line.add_trace(go.Scatter(x=months_long, y=data_2025, name='2025', line=dict(color='#666')))
+            months, acres_data = get_forest_data(sheets_data)
             
-            fig_line.update_layout(
-                height=400,
-                showlegend=True,
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                yaxis_title="Acres"
-            )
-            st.plotly_chart(fig_line, use_container_width=True)
+            if months and acres_data:
+                fig_line = go.Figure()
+                fig_line.add_trace(go.Scatter(
+                    x=months, 
+                    y=acres_data, 
+                    name='Acres Cleaned',
+                    line=dict(color='#333'),
+                    mode='lines+markers'
+                ))
+                
+                fig_line.update_layout(
+                    height=400,
+                    showlegend=True,
+                    plot_bgcolor='white',
+                    paper_bgcolor='white',
+                    yaxis_title="Acres"
+                )
+                st.plotly_chart(fig_line, use_container_width=True)
+            else:
+                st.warning("⚠️ Forest restoration timeline data not available from Google Sheets")
     
     with col2:
         chart_container = st.container(border=True)
         with chart_container:
-            st.subheader("Acres Cleaned per Month")
-            months_short, acres_data = generate_forest_data()
+            st.subheader("Monthly Restoration Summary")
             
-            # Stacked bar chart
-            fig_stack = go.Figure()
-            fig_stack.add_trace(go.Bar(
-                name='Type 1',
-                x=months_short,
-                y=[x*0.6 for x in acres_data],
-                marker_color='#d5b895'
-            ))
-            fig_stack.add_trace(go.Bar(
-                name='Type 2',
-                x=months_short,
-                y=[x*0.4 for x in acres_data],
-                marker_color='#a6a6a6'
-            ))
-            
-            fig_stack.update_layout(
-                barmode='stack',
-                height=400,
-                showlegend=False,
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                yaxis_title="Acres"
-            )
-            st.plotly_chart(fig_stack, use_container_width=True)
-    
-    # Bottom section - Logs with proper containers
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        log_container = st.container(border=True)
-        with log_container:
-            st.subheader("ArcGIS System Log")
-            log_items = [
-                ("New Support Ticket Opened", "Today"),
-                ("System Reset", "14 min"),
-                ("Production Server Down", "2 hours"),
-                ("System Shutdown", "1 day"),
-                ("DB Overloaded 80%", "1 day"),
-                ("13 New Alerts", "2 days")
-            ]
-            
-            for item, time in log_items:
-                col_a, col_b = st.columns([3, 1])
-                with col_a:
-                    st.write(f"• {item}")
-                with col_b:
-                    st.write(time)
-            st.write("🔄 view all")
-    
-    with col2:
-        log_container = st.container(border=True)
-        with log_container:
-            st.subheader("DIY Volunteers & WildSpotter Submissions Log")
-            # Log entries
+            rtf_hours = get_metric_value('total_rtf_hours', 'decimal')
             st.markdown(f"""
-            **Total RTF Hours: {real_data['total_rtf_hours']:.2f}** - *Real Data*  
-            RTF Volunteer Program Status  
-            Current active volunteers contributing to forest restoration efforts.
+            **Total RTF Hours: {rtf_hours}**  
+            *From Google Sheets*
             
-            ---
-            
-            **Recent Activity** - *Live Updates*  
             Forest restoration activities tracked through volunteer submissions and ArcGIS monitoring.
             """)
 
 # Page 3: Strategic Plan - Pillar 1
 else:
-    # Header
     st.markdown('<div class="component-separator">', unsafe_allow_html=True)
     col1, col2 = st.columns([6, 2])
     with col1:
@@ -512,112 +620,102 @@ else:
         st.markdown("**Sefika Ozturk** - *Admin*")
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Top metrics with REAL DATA
+    # Top metrics - ONLY from Google Sheets
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        with st.container():
-            st.markdown(f"""
-            <div style="background: #4a4a4a; color: white; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Total Responses</div>
-                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{real_data['total_survey_responses']}</div>
-                <div style="font-size: 0.72rem; opacity: 0.8;">Real Data</div>
-            </div>
-            """, unsafe_allow_html=True)
+        survey_responses = get_metric_value('total_survey_responses')
+        st.markdown(f"""
+        <div style="background: #4a4a4a; color: white; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center;">
+            <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Total Responses</div>
+            <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{survey_responses}</div>
+            <div style="font-size: 0.72rem; opacity: 0.8;">From Google Sheets</div>
+        </div>
+        """, unsafe_allow_html=True)
     
+# Complete the third page - Strategic Plan Pillar 1
+# This goes after the cut-off point in your existing code
+
     with col2:
-        with st.container():
-            st.markdown(f"""
-            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
-                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">% Facing Barriers</div>
-                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{real_data['percent_facing_barriers']:.1f}%</div>
-                <div style="font-size: 0.72rem; opacity: 0.8;">Real Data</div>
-            </div>
-            """, unsafe_allow_html=True)
+        barriers_percent = get_metric_value('percent_facing_barriers', 'percentage')
+        st.markdown(f"""
+        <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+            <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">% Facing Barriers</div>
+            <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{barriers_percent}</div>
+            <div style="font-size: 0.72rem; opacity: 0.8;">From Google Sheets</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col3:
-        with st.container():
-            st.markdown(f"""
-            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
-                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Accessibility</div>
-                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">+{real_data['percent_change_accessibility']:.1f}%</div>
-                <div style="font-size: 0.72rem; opacity: 0.8;">Real Data</div>
-            </div>
-            """, unsafe_allow_html=True)
+        accessibility_change = get_metric_value('percent_change_accessibility', 'percentage')
+        st.markdown(f"""
+        <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+            <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Accessibility</div>
+            <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{accessibility_change}</div>
+            <div style="font-size: 0.72rem; opacity: 0.8;">From Google Sheets</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col4:
-        with st.container():
-            st.markdown(f"""
-            <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
-                <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Park Visits</div>
-                <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">+{real_data['percent_change_park_visits']:.1f}%</div>
-                <div style="font-size: 0.72rem; opacity: 0.8;">↑ 2.2%</div>
-            </div>
-            """, unsafe_allow_html=True)
+        park_visits_change = get_metric_value('percent_change_park_visits', 'percentage')
+        st.markdown(f"""
+        <div style="background: #f0f2f6; color: #333; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; height: 100px; display: flex; flex-direction: column; justify-content: center; border: 1px solid #e1e5e9;">
+            <div style="font-size: 0.8rem; font-weight: 500; margin-bottom: 0.4rem; opacity: 0.9;">Park Visits</div>
+            <div style="font-size: 1.7rem; font-weight: 600; margin-bottom: 0.2rem;">{park_visits_change}</div>
+            <div style="font-size: 0.72rem; opacity: 0.8;">From Google Sheets</div>
+        </div>
+        """, unsafe_allow_html=True)
     
-    # Main chart with proper container
-    col1, col2 = st.columns([3, 1])
-    
-    # Main chart with filters in same container
+    # Main chart - Park Accessibility Ratings Over Time
     chart_container = st.container(border=True)
     with chart_container:
-        # Create columns within the same container
         col1, col2 = st.columns([3, 1])
         
         with col1:
             st.subheader("Park Accessibility Ratings Over Time by Organization")
             
-            def generate_accessibility_data():
-                months = ['01/25', '02/25', '03/25', '04/25', '05/25', '06/25', '07/25', '08/25']
-                iclr = [30, 58, 43, 30, 20, 55, 25, 68]
-                cerecore = [85, 82, 65, 55, 75, 60, 54, 60]
-                return months, iclr, cerecore
+            months, org_data = get_accessibility_data(sheets_data)
             
-            months_acc, iclr_data, cerecore_data = generate_accessibility_data()
-            
-            fig_acc = go.Figure()
-            fig_acc.add_trace(go.Scatter(
-                x=months_acc, 
-                y=iclr_data, 
-                name='ICLR',
-                line=dict(color='#333'),
-                marker=dict(size=8)
-            ))
-            fig_acc.add_trace(go.Scatter(
-                x=months_acc, 
-                y=cerecore_data, 
-                name='Cerecore HCA',
-                line=dict(color='#666'),
-                marker=dict(size=8)
-            ))
-            
-            fig_acc.update_layout(
-                height=400,
-                showlegend=True,
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                yaxis=dict(range=[0, 100])
-            )
-            st.plotly_chart(fig_acc, use_container_width=True)
+            if months and org_data:
+                fig_acc = go.Figure()
+                colors = ['#333', '#666', '#999', '#ccc']
+                
+                for i, (org_name, org_values) in enumerate(org_data.items()):
+                    fig_acc.add_trace(go.Scatter(
+                        x=months[:len(org_values)], 
+                        y=org_values[:len(months)], 
+                        name=org_name,
+                        line=dict(color=colors[i % len(colors)]),
+                        marker=dict(size=8)
+                    ))
+                
+                fig_acc.update_layout(
+                    height=400,
+                    showlegend=True,
+                    plot_bgcolor='white',
+                    paper_bgcolor='white',
+                    yaxis=dict(range=[0, 100]),
+                    yaxis_title="Accessibility Rating"
+                )
+                st.plotly_chart(fig_acc, use_container_width=True)
+            else:
+                st.warning("⚠️ Accessibility ratings data not available from Google Sheets")
         
         with col2:
             st.markdown("### Filters")
             col_q4, col_q5, col_q6 = st.columns(3)
             with col_q4:
-                st.button("Q4", type="secondary")
+                st.button("Q4", type="secondary", key="filter_q4")
             with col_q5:
-                st.button("Q5", type="secondary") 
+                st.button("Q5", type="secondary", key="filter_q5") 
             with col_q6:
-                st.button("Q6", type="primary")
+                st.button("Q6", type="primary", key="filter_q6")
             
-            st.selectbox("Pick date", ["04/2025"])
-            st.selectbox("Pick organization", ["ICLR, Cerecore HCA"])
-            st.checkbox("Show multiple", value=True)
+            st.selectbox("Pick date", ["04/2025"], key="date_filter")
+            st.selectbox("Pick organization", ["All Organizations"], key="org_filter")
+            st.checkbox("Show multiple", value=True, key="multi_filter")
     
-    # Bottom section - Horizontal bar chart with proper container
-    col1, col2 = st.columns([4, 1])
-
-    # Bottom section - Horizontal bar chart with Q4/Q5/Q6 toggle at top of container
+    # Bottom section - Survey Statements Horizontal Bar Chart
     chart_container = st.container(border=True)
     with chart_container:
         # Header row with title and toggle buttons
@@ -629,42 +727,37 @@ else:
         with col_buttons:
             col_q4b, col_q5b, col_q6b = st.columns(3)
             with col_q4b:
-                st.button("Q4", type="secondary", key="q4b")
-            with col_q5b:
-                st.button("Q5", type="secondary", key="q5b")
+                st.button("Q4", type="secondary", key="stmt_q4")
+            with col_q5b:  
+                st.button("Q5", type="secondary", key="stmt_q5")
             with col_q6b:
-                st.button("Q6", type="primary", key="q6b")
+                st.button("Q6", type="primary", key="stmt_q6")
         
-        # Full-width chart
-        statements = [
-            "They feel safe at the park.",
-            "They feel welcome at the park.",
-            "It is easy for them to get equipments they need.",
-            "It is easy to find information about park activities.",
-            "They see people that look like them at the park.",
-            "The park has activities they want to participate in.",
-            "It is easy to find their way around the park.",
-            "It is easy to physically get to the park."
-        ]
+        # Full-width chart using Google Sheets survey data
+        statements, percentages = get_survey_statements(sheets_data)
         
-        values = [80, 66, 46, 45, 36, 34, 20, 13]
-        
-        fig_horiz = go.Figure()
-        fig_horiz.add_trace(go.Bar(
-            y=statements,
-            x=values,
-            orientation='h',
-            marker_color='#333'
-        ))
-        
-        fig_horiz.update_layout(
-            height=500,
-            xaxis_title="Response Rate (%)",
-            yaxis_title="",
-            showlegend=False,
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            margin=dict(l=300, r=50, t=50, b=50),
-            xaxis=dict(range=[0, 100])
-        )
-        st.plotly_chart(fig_horiz, use_container_width=True)
+        if statements and percentages:
+            fig_horiz = go.Figure()
+            fig_horiz.add_trace(go.Bar(
+                y=statements,
+                x=percentages,
+                orientation='h',
+                marker_color='#333'
+            ))
+            
+            fig_horiz.update_layout(
+                height=500,
+                xaxis_title="Response Rate (%)",
+                yaxis_title="",
+                showlegend=False,
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                margin=dict(l=300, r=50, t=50, b=50),
+                xaxis=dict(range=[0, 100])
+            )
+            st.plotly_chart(fig_horiz, use_container_width=True)
+        else:
+            st.warning("⚠️ Survey statements data not available from Google Sheets")
+            
+            # Fallback to show expected format
+            st.info("Expected data format: Statement column and Percentage column in survey_data sheet")
