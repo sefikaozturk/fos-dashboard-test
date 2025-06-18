@@ -1,4 +1,8 @@
-import streamlit as st
+ import streamlit as st
++# ─────────── Securely load Google Sheets creds ───────────
++spreadsheet_id = st.secrets["SPREADSHEET_ID"]
++api_key         = st.secrets["GOOGLE_SHEETS_API_KEY"]
+
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -291,17 +295,18 @@ def get_data_processor(spreadsheet_id: str, api_key: str):
 with st.sidebar:
     st.markdown("🌲 **Friends of Shelby**")
     st.markdown("### Data Configuration")
-    default_spreadsheet_id = "1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0"
-    spreadsheet_id = st.text_input("Spreadsheet ID", value=default_spreadsheet_id)
-    api_key = st.text_input("Google Sheets API Key", type="password")
+
+    # -- keep your Refresh Data button exactly where it was --
     if st.button("Refresh Data"):
         st.cache_data.clear()
+
     st.markdown('<div class="nav-section">', unsafe_allow_html=True)
     st.markdown("### Navigation")
-    volunteer_selected = st.button("Volunteer Program", key="nav1", use_container_width=True)
-    forest_selected = st.button("Restore The Forest Program", key="nav2", use_container_width=True)
-    strategic_selected = st.button("Strategic Plan - Pillar 1", key="nav3", use_container_width=True)
+    volunteer_selected = st.button("Volunteer Program",            key="nav1", use_container_width=True)
+    forest_selected    = st.button("Restore The Forest Program",    key="nav2", use_container_width=True)
+    strategic_selected = st.button("Strategic Plan - Pillar 1",     key="nav3", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
+
     st.markdown("### General Filters")
     st.selectbox("Date Range", ["Last Month", "Last 3 Months", "Last Year"], key="sidebar_date")
     st.selectbox("Organization", ["All", "ICLR", "Cerecore HCA"], key="sidebar_org")
