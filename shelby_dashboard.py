@@ -19,25 +19,36 @@ st.set_page_config(
 # Function to fetch real data from Google Sheets
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def fetch_google_sheets_data():
-    """Fetch ALL data from Google Sheets - no fallbacks"""
+    """Fetch ALL data from Google Sheets with correct GIDs"""
     try:
-        # Main data sheet
-        main_sheet_url = "https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=433779691"
+        # Your Google Sheets document ID
+        spreadsheet_id = "1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0"
         
-        # Additional sheets for different data types
+        # Correct sheet URLs with your actual GIDs
         sheet_urls = {
-            'main_metrics': main_sheet_url,
-            'volunteer_trends': f"https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=0",
-            'forest_data': f"https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=1", 
-            'accessibility_data': f"https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=2",
-            'survey_data': f"https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=3"
+            'main_metrics': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=433779691",  # Overall Dashboard
+            'volunteer_trends': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=650046450",  # Volunteer Participation Trends
+            'volunteer_satisfaction': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=1063103188",  # Volunteer Satisfaction
+            'popular_events': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=130383720",  # Most Popular Events
+            'acres_timeline': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=2145939805",  # Acres Cleaned Timeline
+            'acres_monthly': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=614540949",  # Acres Cleaned Monthly
+            'barrier_ratings': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=385018677",  # Barrier Ratings Over Time
+            'park_visits': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=840958021",  # Park Visits Data
+            'accessibility_ratings': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=993445816",  # Park Accessibility Ratings
+            'survey_details': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=571418631"  # Survey Response Details
         }
         
         all_data = {}
         
         for sheet_name, url in sheet_urls.items():
             try:
-                response = requests.get(url, timeout=15)
+                # Add headers to mimic browser request
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+                
+                response = requests.get(url, timeout=15, headers=headers)
+                
                 if response.status_code == 200:
                     csv_data = StringIO(response.text)
                     df = pd.read_csv(csv_data)
@@ -49,12 +60,13 @@ def fetch_google_sheets_data():
                     df = df.dropna(how='all').dropna(axis=1, how='all')
                     
                     all_data[sheet_name] = df
+                    st.success(f"✅ Loaded {sheet_name}: {len(df)} rows, {len(df.columns)} columns")
                 else:
-                    st.error(f"Failed to fetch {sheet_name}: HTTP {response.status_code}")
+                    st.error(f"❌ Failed to fetch {sheet_name}: HTTP {response.status_code}")
                     all_data[sheet_name] = None
                     
             except Exception as e:
-                st.error(f"Error fetching {sheet_name}: {str(e)}")
+                st.error(f"❌ Error fetching {sheet_name}: {str(e)}")
                 all_data[sheet_name] = None
         
         return all_data
@@ -62,6 +74,7 @@ def fetch_google_sheets_data():
     except Exception as e:
         st.error(f"Critical error fetching Google Sheets data: {str(e)}")
         return None
+
 
 # Function to extract metrics from the main data sheet
 def extract_metrics(sheets_data):
