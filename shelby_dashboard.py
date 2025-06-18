@@ -1,54 +1,23 @@
-import streamlit as st
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-import requests
-from io import StringIO
+# Replace the fetch_google_sheets_data function with this corrected version:
 
-# Page config
-st.set_page_config(
-    page_title="Friends of Shelby Dashboard",
-    page_icon="🌲",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Function to fetch real data from Google Sheets
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def fetch_google_sheets_data():
     """Fetch ALL data from Google Sheets with correct GIDs"""
     try:
-        # Your Google Sheets document ID
-        spreadsheet_id = "1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0"
-        
-        # Correct sheet URLs with your actual GIDs
+        # Updated sheet URLs with correct GIDs
         sheet_urls = {
-            'main_metrics': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=433779691",  # Overall Dashboard
-            'volunteer_trends': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=650046450",  # Volunteer Participation Trends
-            'volunteer_satisfaction': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=1063103188",  # Volunteer Satisfaction
-            'popular_events': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=130383720",  # Most Popular Events
-            'acres_timeline': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=2145939805",  # Acres Cleaned Timeline
-            'acres_monthly': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=614540949",  # Acres Cleaned Monthly
-            'barrier_ratings': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=385018677",  # Barrier Ratings Over Time
-            'park_visits': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=840958021",  # Park Visits Data
-            'accessibility_ratings': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=993445816",  # Park Accessibility Ratings
-            'survey_details': f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=csv&gid=571418631"  # Survey Response Details
+            'main_metrics': "https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=433779691",
+            'volunteer_trends': "https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=650046450",
+            'forest_data': "https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=2145939805", 
+            'accessibility_data': "https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=993445816",
+            'survey_data': "https://docs.google.com/spreadsheets/d/1OgP1vp1OjiRgtisNrHoHxPIPbRxGjKtcegCS7ztVPr0/export?format=csv&gid=571418631"
         }
         
         all_data = {}
         
         for sheet_name, url in sheet_urls.items():
             try:
-                # Add headers to mimic browser request
-                headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                }
-                
-                response = requests.get(url, timeout=15, headers=headers)
-                
+                response = requests.get(url, timeout=30)  # Increased timeout
                 if response.status_code == 200:
                     csv_data = StringIO(response.text)
                     df = pd.read_csv(csv_data)
@@ -60,13 +29,14 @@ def fetch_google_sheets_data():
                     df = df.dropna(how='all').dropna(axis=1, how='all')
                     
                     all_data[sheet_name] = df
-                    st.success(f"✅ Loaded {sheet_name}: {len(df)} rows, {len(df.columns)} columns")
+                    print(f"Successfully loaded {sheet_name}: {len(df)} rows, {len(df.columns)} columns")
+                    print(f"Columns: {list(df.columns)}")
                 else:
-                    st.error(f"❌ Failed to fetch {sheet_name}: HTTP {response.status_code}")
+                    st.error(f"Failed to fetch {sheet_name}: HTTP {response.status_code}")
                     all_data[sheet_name] = None
                     
             except Exception as e:
-                st.error(f"❌ Error fetching {sheet_name}: {str(e)}")
+                st.error(f"Error fetching {sheet_name}: {str(e)}")
                 all_data[sheet_name] = None
         
         return all_data
@@ -75,10 +45,10 @@ def fetch_google_sheets_data():
         st.error(f"Critical error fetching Google Sheets data: {str(e)}")
         return None
 
+# Replace the extract_metrics function with this improved version:
 
-# Function to extract metrics from the main data sheet
 def extract_metrics(sheets_data):
-    """Extract key metrics from Google Sheets data"""
+    """Extract key metrics from Google Sheets data with better column detection"""
     if not sheets_data or 'main_metrics' not in sheets_data or sheets_data['main_metrics'] is None:
         st.error("Main metrics data not available from Google Sheets")
         return {}
@@ -87,47 +57,67 @@ def extract_metrics(sheets_data):
     metrics = {}
     
     try:
-        # Method 1: If data is in key-value pairs format
-        if 'Metric' in df.columns and 'Value' in df.columns:
-            for _, row in df.iterrows():
-                if pd.notna(row['Metric']) and pd.notna(row['Value']):
-                    key = str(row['Metric']).strip().lower().replace(' ', '_').replace('%', 'percent')
-                    value = pd.to_numeric(row['Value'], errors='coerce')
-                    if pd.notna(value):
-                        metrics[key] = value
+        st.write("Debug - Main metrics DataFrame:")
+        st.write(df.head())
+        st.write("Columns:", list(df.columns))
         
-        # Method 2: If metrics are in column headers with values below
-        else:
-            for col in df.columns:
-                if col.strip():
-                    clean_col = col.strip().lower().replace(' ', '_').replace('%', 'percent')
-                    # Get first non-null numeric value from the column
-                    col_values = pd.to_numeric(df[col], errors='coerce').dropna()
-                    if len(col_values) > 0:
-                        metrics[clean_col] = col_values.iloc[0]
+        # Method 1: Look for specific metric patterns in any column
+        for col in df.columns:
+            for idx, value in df[col].items():
+                if pd.notna(value):
+                    str_val = str(value).strip()
+                    
+                    # Look for common patterns
+                    if 'total volunteers' in str_val.lower():
+                        num_match = re.search(r'(\d+(?:\.\d+)?)', str_val)
+                        if num_match:
+                            metrics['total_volunteers'] = float(num_match.group(1))
+                    
+                    elif 'total hours' in str_val.lower():
+                        num_match = re.search(r'(\d+(?:\.\d+)?)', str_val)
+                        if num_match:
+                            metrics['total_hours'] = float(num_match.group(1))
+                    
+                    elif 'value' in str_val.lower() and 'hour' in str_val.lower():
+                        num_match = re.search(r'(\d+(?:\.\d+)?)', str_val)
+                        if num_match:
+                            metrics['value_of_hours'] = float(num_match.group(1))
+                    
+                    elif 'change' in str_val.lower() and 'year' in str_val.lower():
+                        num_match = re.search(r'(\d+(?:\.\d+)?)', str_val)
+                        if num_match:
+                            metrics['change_from_last_year'] = float(num_match.group(1))
         
-        # Method 3: Look for specific patterns in cell values
-        if not metrics:
-            # Search through all cells for recognizable patterns
-            for col in df.columns:
-                for idx, value in df[col].items():
+        # Method 2: If the sheet has a standard format with metric names and values
+        if len(df.columns) >= 2:
+            first_col = df.columns[0]
+            second_col = df.columns[1]
+            
+            for idx, row in df.iterrows():
+                if pd.notna(row[first_col]) and pd.notna(row[second_col]):
+                    metric_name = str(row[first_col]).strip().lower()
+                    value = pd.to_numeric(row[second_col], errors='coerce')
+                    
                     if pd.notna(value):
-                        str_val = str(value).strip()
-                        # Look for patterns like "Total Volunteers: 891"
-                        if ':' in str_val:
-                            parts = str_val.split(':', 1)
-                            if len(parts) == 2:
-                                key = parts[0].strip().lower().replace(' ', '_')
-                                val = pd.to_numeric(parts[1].strip(), errors='coerce')
-                                if pd.notna(val):
-                                    metrics[key] = val
+                        # Map common metric names
+                        if 'volunteer' in metric_name and 'total' in metric_name:
+                            metrics['total_volunteers'] = value
+                        elif 'hour' in metric_name and 'total' in metric_name:
+                            metrics['total_hours'] = value
+                        elif 'value' in metric_name and 'hour' in metric_name:
+                            metrics['value_of_hours'] = value
+                        elif 'change' in metric_name or 'percent' in metric_name:
+                            metrics['change_from_last_year'] = value
+        
+        st.write("Debug - Extracted metrics:", metrics)
         
     except Exception as e:
         st.error(f"Error extracting metrics: {str(e)}")
     
     return metrics
 
-# Function to get volunteer trend data from sheets
+# Replace the get_volunteer_trends function:
+
 def get_volunteer_trends(sheets_data):
     """Extract volunteer trend data from Google Sheets"""
     if not sheets_data or 'volunteer_trends' not in sheets_data or sheets_data['volunteer_trends'] is None:
@@ -137,26 +127,39 @@ def get_volunteer_trends(sheets_data):
     df = sheets_data['volunteer_trends']
     
     try:
-        # Look for month/date column
-        month_col = None
+        st.write("Debug - Volunteer trends DataFrame:")
+        st.write(df.head())
+        st.write("Columns:", list(df.columns))
+        
+        # More flexible column detection
+        date_col = None
         for col in df.columns:
-            if any(keyword in col.lower() for keyword in ['month', 'date', 'time', 'period']):
-                month_col = col
+            col_lower = col.lower()
+            if any(keyword in col_lower for keyword in ['month', 'date', 'time', 'period', 'week']):
+                date_col = col
                 break
         
-        if month_col is None:
-            st.warning("No month/date column found in volunteer trends data")
+        # If no date column found, use first column
+        if date_col is None and len(df.columns) > 0:
+            date_col = df.columns[0]
+        
+        if date_col is None:
+            st.warning("No date column found in volunteer trends data")
             return None, None
         
-        months = df[month_col].dropna().tolist()
+        months = df[date_col].dropna().astype(str).tolist()
         activities = {}
         
         # Get all other numeric columns as activities
         for col in df.columns:
-            if col != month_col:
-                numeric_data = pd.to_numeric(df[col], errors='coerce').fillna(0)
-                if numeric_data.sum() > 0:  # Only include if there's actual data
-                    activities[col] = numeric_data.tolist()
+            if col != date_col:
+                # Try to convert to numeric, filling NaN with 0
+                try:
+                    numeric_data = pd.to_numeric(df[col], errors='coerce').fillna(0)
+                    if numeric_data.sum() > 0:  # Only include if there's actual data
+                        activities[col] = numeric_data.tolist()
+                except:
+                    continue
         
         return months, activities
         
@@ -164,7 +167,11 @@ def get_volunteer_trends(sheets_data):
         st.error(f"Error processing volunteer trends: {str(e)}")
         return None, None
 
-# Function to get forest restoration data
+# Add this import at the top of your file:
+import re
+
+# Replace the get_forest_data function:
+
 def get_forest_data(sheets_data):
     """Extract forest restoration data from Google Sheets"""
     if not sheets_data or 'forest_data' not in sheets_data or sheets_data['forest_data'] is None:
@@ -174,7 +181,11 @@ def get_forest_data(sheets_data):
     df = sheets_data['forest_data']
     
     try:
-        # Look for month and acres columns
+        st.write("Debug - Forest data DataFrame:")
+        st.write(df.head())
+        st.write("Columns:", list(df.columns))
+        
+        # Look for month and acres columns with more flexibility
         month_col = None
         acres_col = None
         
@@ -182,14 +193,20 @@ def get_forest_data(sheets_data):
             col_lower = col.lower()
             if any(keyword in col_lower for keyword in ['month', 'date', 'time', 'period']):
                 month_col = col
-            elif any(keyword in col_lower for keyword in ['acre', 'area', 'cleaned', 'restored']):
+            elif any(keyword in col_lower for keyword in ['acre', 'area', 'cleaned', 'restored', 'forest']):
                 acres_col = col
+        
+        # Fallback to first two columns if specific columns not found
+        if month_col is None and len(df.columns) > 0:
+            month_col = df.columns[0]
+        if acres_col is None and len(df.columns) > 1:
+            acres_col = df.columns[1]
         
         if month_col is None or acres_col is None:
             st.warning("Month or acres column not found in forest data")
             return None, None
         
-        months = df[month_col].dropna().tolist()
+        months = df[month_col].dropna().astype(str).tolist()
         acres = pd.to_numeric(df[acres_col], errors='coerce').fillna(0).tolist()
         
         return months, acres
