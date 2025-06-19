@@ -1,7 +1,7 @@
 import streamlit as st
-+# ─────────── Securely load Google Sheets creds ───────────
-+spreadsheet_id = st.secrets["SPREADSHEET_ID"]
-+api_key         = st.secrets["GOOGLE_SHEETS_API_KEY"]
+# ─────────── Securely load Google Sheets creds ───────────
+spreadsheet_id = st.secrets["SPREADSHEET_ID"]
+api_key         = st.secrets["GOOGLE_SHEETS_API_KEY"]
 
 import plotly.express as px
 import plotly.graph_objects as go
